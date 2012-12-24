@@ -7,6 +7,7 @@ if (Meteor.isClient) {
       arc,
       currentOrigin,
       transitionCoordinates,
+      TRANSITION_DELAY,
       SCALE,
       ORIGIN,
       TRANSLATE,
@@ -31,21 +32,27 @@ if (Meteor.isClient) {
     SCALE = 200;
 
     /**
+     * @type {Array}
+     * @const
+     */
+    ORIGIN = [0, 0];
+
+    /**
+     * @type {Array}
+     * @const
+     */
+    TRANSLATE = [250, 250];
+
+    /**
      * @type {number}
      * @const
      */
-    ORIGIN = [-71.03,42.37];
+    TRANSITION_DELAY = 5;
 
     /**
      * @type {number}
      */
     currentOrigin = ORIGIN;
-
-    /**
-     * @type {number}
-     * @const
-     */
-    TRANSLATE = [250, 250];
 
     /**
      * @type {Object}
@@ -131,7 +138,7 @@ if (Meteor.isClient) {
       currentOrigin = coords;
       d3.timer.flush();
       feature.attr('d', clip);
-      _.delay(_.bind(moveToCenter, this), 5);
+      _.delay(_.bind(moveToCenter, this), TRANSITION_DELAY);
     }
 
     /**
