@@ -30,7 +30,7 @@ if (Meteor.isClient) {
      * @type {number}
      * @const
      */
-    ORIGIN = [-71.03,42.37]
+    ORIGIN = [-71.03,42.37];
     /**
      * @type {number}
      */
@@ -76,8 +76,6 @@ if (Meteor.isClient) {
      * @param {Object} data The geojson data.
      */
     function draw (data) {
-      console.log('data', data);
-      console.log(d3.select('#map'));
       d3.select('#map').selectAll('path')
         .data(data.features)
         .enter().append('svg:path')
@@ -115,10 +113,8 @@ if (Meteor.isClient) {
     function moveToCenter() {
       var coords;
       if (_.isEmpty(transitionCoordinates)) {
-        console.log('Done moving');
         return;
       }
-      console.log('move step');
       coords = transitionCoordinates.shift();
       projection.origin(coords);
       circle.origin(coords);
@@ -135,14 +131,9 @@ if (Meteor.isClient) {
       var id, data, pixel, coords;
       d3.select(event.target).classed('clicked', true);
       id = event.target.id;
-      console.log('id', id);
       data = _.where(dataStore.features, {id: id});
-      console.log('data', data);
-      console.log('data geo',  _.first(data).geometry);
       pixel = path.centroid(_.first(data).geometry);
-      console.log('pixel', pixel);
       coords = projection.invert(pixel);
-      console.log('coords', coords);
       reCenterMap(coords);
     }
 
