@@ -12,34 +12,41 @@ if (Meteor.isClient) {
       TRANSLATE,
       PRECISION,
       dataStore;
+
     /**
      * @type {Object}
      */
     dataStore = null;
+
     /**
      * @type {number}
      * @const
      */
     PRECISION = 2;
+
     /**
      * @type {number}
      * @const
      */
     SCALE = 200;
+
     /**
      * @type {number}
      * @const
      */
     ORIGIN = [-71.03,42.37];
+
     /**
      * @type {number}
      */
     currentOrigin = ORIGIN;
+
     /**
      * @type {number}
      * @const
      */
     TRANSLATE = [250, 250];
+
     /**
      * @type {Object}
      */
@@ -48,17 +55,20 @@ if (Meteor.isClient) {
       .origin(ORIGIN)
       .mode('orthographic')
       .translate(TRANSLATE);
+
     /**
      * @type {Object}
      */
     circle = d3.geo.greatCircle()
       .origin(projection.origin());
+
     /**
      * @type {Object}
      */
     path = d3.geo.path()
       .projection(projection);
     d3.json('/data/countries.geo.json', handleData);
+
     /**
      * @type {Object}
      */
