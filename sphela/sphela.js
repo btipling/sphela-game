@@ -125,6 +125,7 @@ if (Meteor.isClient) {
         .attr('cx', SCALE)
         .attr('cy', SCALE)
         .attr('r', SCALE)
+        .style('fill', 'url(#ocean)');
       svg.selectAll('path')
         .data(data.features)
         .enter().append('svg:path')
