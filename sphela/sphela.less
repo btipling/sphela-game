@@ -1,12 +1,32 @@
+@black: #000;
 @white: #FFF;
-@blue: #00F;
+@blue: #5AC9FF;
 @red: #F00;
+@green: #0F0;
+@brown: #FF695A;
+@orange: #FFA45A;
+@bg: url(/images/stars.jpg);
 body {
-  background: @white;
+  background: @black @bg no-repeat center;
+  background-size: 100% auto;
+  color: @white;
+}
+#main {
+  padding-top: 50px;
+  text-align: center;
+}
+svg {
+  background: transparent;
+  width: 400px;
+  height: 400px;
+}
+circle {
+  stroke: transparent;
+  fill: @blue;
 }
 path {
-  stroke: @white;
-  fill: @blue;
+  stroke: @orange;
+  fill: @brown;
 }
 path.clicked {
   fill: @red;

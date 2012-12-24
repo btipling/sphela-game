@@ -12,7 +12,33 @@ if (Meteor.isClient) {
       ORIGIN,
       TRANSLATE,
       PRECISION,
+      COLORS,
       dataStore;
+
+    /**
+     * @type {Array.<string>}
+     * @const
+     */
+    COLORS = [
+      '#ef8627',
+      '#ff983d',
+      '#f4a885',
+      '#ff8f65',
+      '#e7ac2e',
+      '#f54e36',
+      '#e28767',
+      '#f89685',
+      '#e2cc5f',
+      '#faca6f',
+      '#f7d454',
+      '#ff7a2f',
+      '#d0835c',
+      '#ffa586',
+      '#ff8e2c',
+      '#e2c073',
+      '#f7b52f',
+      '#ffdc6a'
+    ];
 
     /**
      * @type {Object}
@@ -41,7 +67,7 @@ if (Meteor.isClient) {
      * @type {Array}
      * @const
      */
-    TRANSLATE = [250, 250];
+    TRANSLATE = [200, 200];
 
     /**
      * @type {number}
@@ -93,9 +119,16 @@ if (Meteor.isClient) {
      * @param {Object} data The geojson data.
      */
     function draw (data) {
-      d3.select('#map').selectAll('path')
+      var svg;
+      svg = d3.select('#map');
+      svg.append('svg:circle')
+        .attr('cx', SCALE)
+        .attr('cy', SCALE)
+        .attr('r', SCALE)
+      svg.selectAll('path')
         .data(data.features)
         .enter().append('svg:path')
+        .style('fill', function(d, i) { return COLORS[i%COLORS.length] })
         .attr('id', function(d) { return d.id })
         .attr('d', clip);
       feature = d3.selectAll('path');
