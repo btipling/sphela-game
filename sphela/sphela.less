@@ -6,19 +6,36 @@
 @brown: #FF695A;
 @orange: #FFA45A;
 @bg: url(/images/stars.jpg);
+html {
+  height: 100%;
+}
 body {
-  background: @black @bg no-repeat center;
-  background-size: 100% auto;
+  font-family: 'Iceland', cursive;
+  background: @black @bg no-repeat 50% 50%;
+  background-size: cover;
   color: @white;
+  height: 100%;
+}
+h1 {
+  font-size: 300%;
+}
+.navbar .brand {
+  margin-left: 0px;
 }
 #main {
   padding-top: 50px;
   text-align: center;
 }
 svg {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
   background: transparent;
-  width: 400px;
-  height: 400px;
+}
+.navbar button {
+  margin-right: 5px;
 }
 circle {
   stroke: transparent;

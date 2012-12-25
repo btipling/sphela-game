@@ -2,15 +2,16 @@ if (Meteor.isClient) {
   $(window).ready(function() {
     var circle,
       projection,
+      projectionBg,
       path,
       feature,
       arc,
       currentOrigin,
+      currentScale,
       transitionCoordinates,
       TRANSITION_DELAY,
       SCALE,
       ORIGIN,
-      TRANSLATE,
       PRECISION,
       COLORS,
       dataStore;
@@ -64,12 +65,6 @@ if (Meteor.isClient) {
     ORIGIN = [0, 0];
 
     /**
-     * @type {Array}
-     * @const
-     */
-    TRANSLATE = [200, 200];
-
-    /**
      * @type {number}
      * @const
      */
@@ -81,13 +76,19 @@ if (Meteor.isClient) {
     currentOrigin = ORIGIN;
 
     /**
+     * @type {number}
+     */
+    currentScale = SCALE;
+
+
+    /**
      * @type {Object}
      */
     projection = d3.geo.azimuthal()
-      .scale(SCALE)
+      .scale(currentScale)
       .origin(ORIGIN)
-      .mode('orthographic')
-      .translate(TRANSLATE);
+      .mode('orthographic');
+    centerMap();
 
     /**
      * @type {Object}
@@ -100,7 +101,13 @@ if (Meteor.isClient) {
      */
     path = d3.geo.path()
       .projection(projection);
+
     d3.json('/data/countries.geo.json', handleData);
+    $(window).on('resize', function () {
+      transitionCoordinates = [projection.origin()];
+      centerMap();
+      moveToCenter();
+    });
 
     /**
      * @type {Object}
@@ -121,18 +128,41 @@ if (Meteor.isClient) {
     function draw (data) {
       var svg;
       svg = d3.select('#map');
-      svg.append('svg:circle')
-        .attr('cx', SCALE)
-        .attr('cy', SCALE)
-        .attr('r', SCALE)
-        .style('fill', 'url(#ocean)');
+      projectionBg = svg.append('svg:circle');
+      projectionBg.attr('cx', currentScale)
+        .attr('cy', currentScale)
+        .attr('r', currentScale)
+        .style('fill', 'url(#ocean)')
+        .style('filter', 'url(#atmosphere)');
       svg.selectAll('path')
         .data(data.features)
         .enter().append('svg:path')
         .style('fill', function(d, i) { return COLORS[i%COLORS.length] })
         .attr('id', function(d) { return d.id })
         .attr('d', clip);
+      centerMap();
       feature = d3.selectAll('path');
+    }
+
+    function centerMap() {
+      var width, height, mapWidth, mapHeight, leftSet, topSet;
+      width = $(window).width();
+      height = $(window).height();
+      mapWidth = currentScale
+      mapHeight = currentScale;
+      leftSet =  width/2;
+      topSet =   height/2;
+      projection.translate([leftSet, topSet]);
+      if (projectionBg) {
+        projectionBg.attr('transform',
+            [
+              'translate(',
+              leftSet-mapWidth,
+              ', ',
+              topSet-mapHeight,
+              ')'
+            ].join(''));
+       }
     }
 
     /**
@@ -170,7 +200,6 @@ if (Meteor.isClient) {
       projection.origin(coords);
       circle.origin(coords);
       currentOrigin = coords;
-      d3.timer.flush();
       feature.attr('d', clip);
       _.delay(_.bind(moveToCenter, this), TRANSITION_DELAY);
     }
@@ -178,7 +207,7 @@ if (Meteor.isClient) {
     /**
      * @param {Object} event
      */
-    function pathHandler(event) {
+    function handlePath(event) {
       var id, data, pixel, coords;
       d3.select(event.target).classed('clicked', true);
       id = event.target.id;
@@ -188,8 +217,34 @@ if (Meteor.isClient) {
       reCenterMap(coords);
     }
 
+    /**
+     * @pram {Object} event
+     */
+    function handleZoomIn(event) {
+      currentScale *= 1.4;
+      reDraw();
+    }
+
+    /**
+     * @pram {Object} event
+     */
+    function handleZoomOut(event) {
+      currentScale /= 1.4;
+      reDraw();
+    }
+
+    function reDraw() {
+      projection.scale(currentScale);
+      projection.origin(currentOrigin);
+      circle.origin(currentOrigin);
+      feature.attr('d', clip);
+      projectionBg.attr('r', currentScale);
+    }
+
     Template.app.events({
-      'click path': pathHandler
+      'click path': handlePath,
+      'click .zoom-in': handleZoomIn,
+      'click .zoom-out': handleZoomOut
     });
   });
 }

@@ -1,5 +1,6 @@
 <head>
   <title>Sphela World Domination</title>
+  <link href='http://fonts.googleapis.com/css?family=Iceland' rel='stylesheet' type='text/css'>
 </head>
 
 <body>
@@ -7,15 +8,35 @@
 </body>
 
 <template name="app">
-  <h1>Sphela World Domination</h1>
-  <div id="main">
-    World domination!
+  <div class="container">
+    <div class="navbar navbar-fixed-bottom">
+      <div class="navbar-inner">
+        <a class="brand" href="#">Sphela</a>
+        <span class="zoom pull-right">
+          <button class="btn zoom-in">
+            <i class="icon-plus"></i>
+          </button>
+          <button class="btn zoom-out">
+            <i class="icon-minus"></i>
+          </button>
+        </span>
+      </div>
+    </div>
+  </div>
+  <div id="main" class="container">
+<!--    World domination! -->
     <svg id="map">
-    <radialGradient id="ocean" cx="50%" cy="50%" r="50%" fx="30%" fy="20%">
-      <stop offset="0%" style="stop-color:#FFF;
-      stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#5AC9FF;stop-opacity:1" />
-    </radialGradient>
+    <defs>
+      <radialGradient id="ocean" cx="50%" cy="50%" r="50%" fx="30%" fy="20%">
+        <stop offset="0%" style="stop-color:#FFF;
+        stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#5AC9FF;stop-opacity:1" />
+      </radialGradient>
+      <filter id="atmosphere" x="-0.5" y="-0.5" width="200%" height="200%">
+        <feGaussianBlur result="blurOut" in="SourceGraphic" stdDeviation="30" />
+        <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
+      </filter>
+    </defs>
     </svg>
   </div>
 </template>
