@@ -252,11 +252,15 @@ if (Meteor.isClient) {
       if (Math.abs(transitionScale - currentScale) < change) {
         return;
       }
-      if (currentScale >= max) {
-        transitionScale = currentScale;
-      } else {
-        if (transitionScale < currentScale) {
+      if (transitionScale < currentScale) {
+        if (currentScale >= max) {
+          transitionScale = currentScale;
+        } else {
           transitionScale += (currentScale-transitionScale)/change;
+        }
+      } else {
+        if (transitionScale >= max) {
+          transitionScale = currentScale;
         } else {
           transitionScale -= (transitionScale-currentScale)/change;
         }
