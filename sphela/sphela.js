@@ -12,6 +12,7 @@ if (Meteor.isClient) {
       transitionScale,
       transitionCoordinates,
       TRANSITION_DELAY,
+      COORD_PRECISION,
       SELECTED_REGION,
       SCALE,
       ORIGIN,
@@ -61,6 +62,12 @@ if (Meteor.isClient) {
      * @const
      */
     PRECISION = 3;
+
+    /**
+     * @type {number}
+     * @const
+     */
+    COORD_PRECISION = 0.0001;
 
     /**
      * @type {number}
@@ -130,7 +137,6 @@ if (Meteor.isClient) {
     $(window).on('popstate', function() {
       var id, data;
       id = window.location.pathname.substr(1);
-      console.log('popstate', id);
       data = _.where(dataStore.features, {id: id});
       selectRegion(data);
     });
@@ -189,7 +195,6 @@ if (Meteor.isClient) {
       leftSet =  width/2;
       topSet =   height/2;
       projection.translate([leftSet, topSet]);
-      console.log('projectionBg', projectionBg);
       if (projectionBg) {
         projectionBg.attr('transform',
             [
@@ -216,8 +221,12 @@ if (Meteor.isClient) {
     function reCenterMap(coordinates) {
       var beginning,
         end,
-        arcResult;
-      if (coordinates === currentOrigin) {
+        arcResult,
+        lat_diff,
+        lon_diff;
+      lat_diff = Math.abs(_.first(coordinates) - _.first(currentOrigin));
+      lon_diff = Math.abs(_.last(coordinates) - _.last(currentOrigin));
+      if (lat_diff <= COORD_PRECISION && lon_diff <= COORD_PRECISION) {
         return;
       }
       beginning = currentOrigin;
@@ -333,7 +342,6 @@ if (Meteor.isClient) {
      */
     function handleRegionClick(event) {
       var id, name;
-      console.log('wtf');
       event.preventDefault();
       id = d3.select(event.target).attr('data-id');
       data = _.where(dataStore.features, {id: id});
