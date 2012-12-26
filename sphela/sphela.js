@@ -8,6 +8,7 @@ if (Meteor.isClient) {
       arc,
       currentOrigin,
       currentScale,
+      transitionScale,
       transitionCoordinates,
       TRANSITION_DELAY,
       SCALE,
@@ -80,6 +81,10 @@ if (Meteor.isClient) {
      */
     currentScale = SCALE;
 
+    /**
+     * @type {number}
+     */
+    transitionScale = SCALE;
 
     /**
      * @type {Object}
@@ -209,6 +214,7 @@ if (Meteor.isClient) {
      */
     function handlePath(event) {
       var id, data, pixel, coords;
+      stopZoom();
       d3.select(event.target).classed('clicked', true);
       id = event.target.id;
       data = _.where(dataStore.features, {id: id});
@@ -217,12 +223,18 @@ if (Meteor.isClient) {
       reCenterMap(coords);
     }
 
+    function stopZoom() {
+      currentScale = transitionScale;
+    }
+
     /**
-     * @pram {Object} event
+     * @param {Object} event
      */
     function handleZoomIn(event) {
+      var oldScale;
+      oldScale = currentScale;
       currentScale *= 1.4;
-      reDraw();
+      zoomAnimate(oldScale);
     }
 
     /**
@@ -230,15 +242,29 @@ if (Meteor.isClient) {
      */
     function handleZoomOut(event) {
       currentScale /= 1.4;
-      reDraw();
+      zoomAnimate();
     }
 
-    function reDraw() {
-      projection.scale(currentScale);
-      projection.origin(currentOrigin);
-      circle.origin(currentOrigin);
+    function zoomAnimate() {
+      var change, max;
+      change = 20;
+      max = 400;
+      if (Math.abs(transitionScale - currentScale) < change) {
+        return;
+      }
+      if (currentScale >= max) {
+        transitionScale = currentScale;
+      } else {
+        if (transitionScale < currentScale) {
+          transitionScale += (currentScale-transitionScale)/change;
+        } else {
+          transitionScale -= (transitionScale-currentScale)/change;
+        }
+      }
+      projection.scale(transitionScale);
       feature.attr('d', clip);
-      projectionBg.attr('r', currentScale);
+      projectionBg.attr('r', transitionScale);
+      requestAnimationFrame(_.bind(zoomAnimate, this));
     }
 
     Template.app.events({
