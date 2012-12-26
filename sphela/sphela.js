@@ -7,6 +7,7 @@ if (Meteor.isClient) {
       feature,
       arc,
       currentOrigin,
+      currentRegion,
       currentScale,
       transitionScale,
       transitionCoordinates,
@@ -59,7 +60,7 @@ if (Meteor.isClient) {
      * @type {number}
      * @const
      */
-    PRECISION = 2;
+    PRECISION = 3;
 
     /**
      * @type {number}
@@ -83,6 +84,11 @@ if (Meteor.isClient) {
      * @type {number}
      */
     currentOrigin = ORIGIN;
+
+    /**
+     * @type {Object}
+     */
+    currentRegion = null;
 
     /**
      * @type {number}
@@ -121,6 +127,13 @@ if (Meteor.isClient) {
       centerMap();
       moveToCenter();
     });
+    $(window).on('popstate', function() {
+      var id, data;
+      id = window.location.pathname.substr(1);
+      console.log('popstate', id);
+      data = _.where(dataStore.features, {id: id});
+      selectRegion(data);
+    });
 
     /**
      * @type {Object}
@@ -132,7 +145,18 @@ if (Meteor.isClient) {
      */
     function handleData(data) {
       dataStore = data;
+      findLeftOver();
       draw(data);
+    }
+
+    function findLeftOver() {
+      Session.set('leftOverRegions', _.map(dataStore.features,
+        function(item) {
+        return {
+          name: item.properties.name,
+          id: item.id
+        };
+      }));
     }
 
     /**
@@ -143,6 +167,7 @@ if (Meteor.isClient) {
       svg = d3.select('#map');
       projectionBg = svg.append('svg:circle');
       projectionBg.attr('cx', currentScale)
+        .classed('oceanBG', true)
         .attr('cy', currentScale)
         .attr('r', currentScale)
         .style('fill', 'url(#ocean)')
@@ -161,18 +186,17 @@ if (Meteor.isClient) {
       var width, height, mapWidth, mapHeight, leftSet, topSet;
       width = $(window).width();
       height = $(window).height();
-      mapWidth = currentScale
-      mapHeight = currentScale;
       leftSet =  width/2;
       topSet =   height/2;
       projection.translate([leftSet, topSet]);
+      console.log('projectionBg', projectionBg);
       if (projectionBg) {
         projectionBg.attr('transform',
             [
               'translate(',
-              leftSet-mapWidth,
+              leftSet-SCALE,
               ', ',
-              topSet-mapHeight,
+              topSet-SCALE,
               ')'
             ].join(''));
        }
@@ -193,6 +217,9 @@ if (Meteor.isClient) {
       var beginning,
         end,
         arcResult;
+      if (coordinates === currentOrigin) {
+        return;
+      }
       beginning = currentOrigin;
       end = coordinates;
       arcResult = arc({source: beginning, target: end});
@@ -207,6 +234,9 @@ if (Meteor.isClient) {
     function moveToCenter() {
       var coords;
       if (_.isEmpty(transitionCoordinates)) {
+        // Checking to make sure we actually made it. This is a noop of
+        // we are actually there.
+        selectRegion(currentRegion);
         return;
       }
       coords = transitionCoordinates.shift();
@@ -221,12 +251,11 @@ if (Meteor.isClient) {
      * @param {Object} event
      */
     function handlePath(event) {
-      var id, data;
-      stopZoom();
-      d3.selectAll('.clicked').classed('clicked', false);
-      d3.select(event.target).classed('clicked', true);
+      var id, data, name;
       id = event.target.id;
       data = _.where(dataStore.features, {id: id});
+      name = _.first(data).properties.name;
+      history.pushState({data: data}, name, id);
       selectRegion(data);
     }
 
@@ -234,8 +263,17 @@ if (Meteor.isClient) {
      * @param {Array<Object>} regions;
      */
     function selectRegion(regions) {
-      var region, pixel, coords;
+      var region, pixel, coords, target, parent;
+      stopZoom();
+      currentRegion = regions;
       region = _.first(regions);
+      target = $('#' + region.id).get(0);
+      d3.selectAll('.clicked').classed('clicked', false);
+      d3.select(target).classed('clicked', true);
+      // Putting on top of stack.
+      parent = target.parentNode;
+      parent.removeChild(target);
+      parent.appendChild(target);
       Session.set(SELECTED_REGION, region);
       pixel = path.centroid(region.geometry);
       coords = projection.invert(pixel);
@@ -253,7 +291,7 @@ if (Meteor.isClient) {
       var oldScale;
       oldScale = currentScale;
       currentScale *= 1.4;
-      zoomAnimate(oldScale);
+      animateZoom(oldScale);
     }
 
     /**
@@ -261,10 +299,10 @@ if (Meteor.isClient) {
      */
     function handleZoomOut(event) {
       currentScale /= 1.4;
-      zoomAnimate();
+      animateZoom();
     }
 
-    function zoomAnimate() {
+    function animateZoom() {
       var change, max;
       change = 20;
       max = 400;
@@ -287,19 +325,40 @@ if (Meteor.isClient) {
       projection.scale(transitionScale);
       feature.attr('d', clip);
       projectionBg.attr('r', transitionScale);
-      requestAnimationFrame(_.bind(zoomAnimate, this));
+      requestAnimationFrame(_.bind(animateZoom, this));
+    }
+
+    /**
+     * @param {Object} event
+     */
+    function handleRegionClick(event) {
+      var id, name;
+      console.log('wtf');
+      event.preventDefault();
+      id = d3.select(event.target).attr('data-id');
+      data = _.where(dataStore.features, {id: id});
+      name = _.first(data).properties.name;
+      d3.selectAll('.clicked').classed('clicked', false);
+      d3.select('#' + id).classed('clicked', true);
+      history.pushState({data: data}, name, id);
+      selectRegion(data);
     }
 
     Template.app.events({
       'click path': handlePath,
       'click .zoom-in': handleZoomIn,
-      'click .zoom-out': handleZoomOut
+      'click .zoom-out': handleZoomOut,
+      'click .left-over-region': handleRegionClick
     });
 
     Template.region.regionName = function() {
       var region;
       region = Session.get(SELECTED_REGION);
       return region ? region.properties.name : 'Select a region.';
+    };
+
+    Template.leftOver.leftOverRegions = function(regions) {
+      return Session.get('leftOverRegions');;
     };
   });
 }

@@ -24,6 +24,10 @@ h1 {
 .navbar .brand {
   margin-left: 0px;
 }
+.navbar-inner {
+  a {
+  }
+}
 #main {
   padding-top: 50px;
   text-align: center;
@@ -53,8 +57,26 @@ path:hover {
 }
 path.clicked {
   fill: @lightGreen !important;
+  stroke: @black !important;
+  z-index: 1;
 }
 
 .region-name {
+  position: relative;
   font-size: 200%;
+  padding: 10px;
+  border: 1px solid @white;
+  z-index: 2;
+}
+.regions {
+  font-size: 110%;
+  height: 400px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.github {
+  position: absolute;
+  bottom: 50px;
+  right: 2px;
+  z-index: 3;
 }
