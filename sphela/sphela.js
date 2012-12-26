@@ -151,8 +151,10 @@ if (Meteor.isClient) {
      */
     function handleData(data) {
       dataStore = data;
-      findLeftOver();
-      draw(data);
+      if (dataStore) {
+        findLeftOver();
+        draw(data);
+      }
     }
 
     function findLeftOver() {
@@ -334,7 +336,11 @@ if (Meteor.isClient) {
       projection.scale(transitionScale);
       feature.attr('d', clip);
       projectionBg.attr('r', transitionScale);
-      requestAnimationFrame(_.bind(animateZoom, this));
+      if (typeof requestAnimationFrame !== 'undefined') {
+        requestAnimationFrame(_.bind(animateZoom, this));
+      } else {
+        _.delay(_.bind(animateZoom, this), 0);
+      }
     }
 
     /**
