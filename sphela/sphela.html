@@ -9,6 +9,7 @@
     allowtransparency="true" frameborder="0" scrolling="0" width="62"
     height="20"></iframe>
   {{> app}}
+  {{> ga}}
 </body>
 
 <template name="region">
@@ -65,4 +66,26 @@
     </defs>
     </svg>
   </div>
+</template>
+
+<template name="ga">
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-37271123-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+      var ga = document.createElement('script');
+      ga.type = 'text/javascript';
+      ga.async = true;
+      var suffix = '.google-analytics.com/ga.js';
+      if ('https:' == document.location.protocol) {
+        ga.src = 'https://ssl';
+      } else {
+        ga.src = 'http://www';
+      }
+      var s = document.getElementsByTagName('script')[0];
+      s.parentNode.insertBefore(ga, s);
+    })();
+
+  </script>
 </template>
