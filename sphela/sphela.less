@@ -3,8 +3,10 @@
 @blue: #5AC9FF;
 @red: #F00;
 @green: #0F0;
+@lightGreen: #f8f3db;
 @brown: #FF695A;
 @orange: #FFA45A;
+@lightOrange: #ffe5d0;
 @bg: url(/images/stars.jpg);
 html {
   height: 100%;
@@ -45,6 +47,10 @@ path {
   stroke: @orange;
   fill: @brown;
 }
+path:hover {
+  fill: @lightOrange !important;
+  cursor: pointer;
+}
 path.clicked {
-  fill: @red;
+  fill: @lightGreen !important;
 }

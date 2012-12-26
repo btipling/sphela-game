@@ -215,6 +215,7 @@ if (Meteor.isClient) {
     function handlePath(event) {
       var id, data, pixel, coords;
       stopZoom();
+      d3.selectAll('.clicked').classed('clicked', false);
       d3.select(event.target).classed('clicked', true);
       id = event.target.id;
       data = _.where(dataStore.features, {id: id});
