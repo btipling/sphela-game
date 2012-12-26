@@ -7,6 +7,12 @@
   {{> app}}
 </body>
 
+<template name="region">
+  <div class="region-name">
+    {{regionName}}
+  </div>
+</template>
+
 <template name="app">
   <div class="container">
     <div class="navbar navbar-fixed-bottom">
@@ -24,7 +30,7 @@
     </div>
   </div>
   <div id="main" class="container">
-<!--    World domination! -->
+    {{> region}}
     <svg id="map">
     <defs>
       <radialGradient id="ocean" cx="50%" cy="50%" r="50%" fx="30%" fy="20%">

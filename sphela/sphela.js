@@ -11,11 +11,19 @@ if (Meteor.isClient) {
       transitionScale,
       transitionCoordinates,
       TRANSITION_DELAY,
+      SELECTED_REGION,
       SCALE,
       ORIGIN,
       PRECISION,
       COLORS,
       dataStore;
+
+    /**
+     * Key for setting region in session.
+     * @type {string}
+     * @const
+     */
+    SELECTED_REGION = 'selectedRegion';
 
     /**
      * @type {Array.<string>}
@@ -213,13 +221,23 @@ if (Meteor.isClient) {
      * @param {Object} event
      */
     function handlePath(event) {
-      var id, data, pixel, coords;
+      var id, data;
       stopZoom();
       d3.selectAll('.clicked').classed('clicked', false);
       d3.select(event.target).classed('clicked', true);
       id = event.target.id;
       data = _.where(dataStore.features, {id: id});
-      pixel = path.centroid(_.first(data).geometry);
+      selectRegion(data);
+    }
+
+    /**
+     * @param {Array<Object>} regions;
+     */
+    function selectRegion(regions) {
+      var region, pixel, coords;
+      region = _.first(regions);
+      Session.set(SELECTED_REGION, region);
+      pixel = path.centroid(region.geometry);
       coords = projection.invert(pixel);
       reCenterMap(coords);
     }
@@ -277,6 +295,12 @@ if (Meteor.isClient) {
       'click .zoom-in': handleZoomIn,
       'click .zoom-out': handleZoomOut
     });
+
+    Template.region.regionName = function() {
+      var region;
+      region = Session.get(SELECTED_REGION);
+      return region ? region.properties.name : 'Select a region.';
+    };
   });
 }
 
