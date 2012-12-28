@@ -13,19 +13,10 @@ if (Meteor.isClient) {
       transitionCoordinates,
       TRANSITION_DELAY,
       COORD_PRECISION,
-      SELECTED_REGION,
       SCALE,
       ORIGIN,
       PRECISION,
-      COLORS,
-      dataStore;
-
-    /**
-     * Key for setting region in session.
-     * @type {string}
-     * @const
-     */
-    SELECTED_REGION = 'selectedRegion';
+      COLORS;
 
     /**
      * @type {Array.<string>}
@@ -51,11 +42,6 @@ if (Meteor.isClient) {
       '#f7b52f',
       '#ffdc6a'
     ];
-
-    /**
-     * @type {Object}
-     */
-    dataStore = null;
 
     /**
      * @type {number}
@@ -128,7 +114,6 @@ if (Meteor.isClient) {
     path = d3.geo.path()
       .projection(projection);
 
-    d3.json('/data/countries.geo.json', handleData);
     $(window).on('resize', function () {
       transitionCoordinates = [projection.origin()];
       centerMap();
@@ -142,23 +127,23 @@ if (Meteor.isClient) {
     });
 
     /**
+     * @param {string} id
+     * @return {Array.<string>}
+     */
+    function getVectors(id) {
+      if (_.has(regionStore, id)) {
+        return regionStore[id].vectors;
+      }
+      return [];
+    }
+
+    /**
      * @type {Object}
      */
     arc =  d3.geo.greatArc().precision(PRECISION);
 
-    /**
-     * @param {Object} data
-     */
-    function handleData(data) {
-      dataStore = data;
-      if (dataStore) {
-        findLeftOver();
-        draw(data);
-      }
-    }
-
     function findLeftOver() {
-      Session.set('leftOverRegions', _.map(dataStore.features,
+      Session.set(sessionKeys.ALL_REGIONS, _.map(dataStore.features,
         function(item) {
         return {
           name: item.properties.name,
@@ -285,10 +270,23 @@ if (Meteor.isClient) {
       parent = target.parentNode;
       parent.removeChild(target);
       parent.appendChild(target);
-      Session.set(SELECTED_REGION, region);
+      Session.set(sessionKeys.SELECTED_REGION, region);
+      highlightVectors(region.id);
       pixel = path.centroid(region.geometry);
       coords = projection.invert(pixel);
       reCenterMap(coords);
+    }
+
+    /**
+     * @param {string} regionId
+     */
+    function highlightVectors(regionId) {
+      var vectors;
+      d3.selectAll('.vector').classed('vector', false);
+      vectors = getVectors(regionId);
+      _.each(vectors, function(id) {
+        d3.select('#' + id).classed('vector', true);
+      });
     }
 
     function stopZoom() {
@@ -367,13 +365,23 @@ if (Meteor.isClient) {
 
     Template.region.regionName = function() {
       var region;
-      region = Session.get(SELECTED_REGION);
+      region = Session.get(sessionKeys.SELECTED_REGION);
       return region ? region.properties.name : 'Select a region.';
     };
 
     Template.leftOver.leftOverRegions = function(regions) {
-      return Session.get('leftOverRegions');;
+      return Session.get(sessionKeys.ALL_REGIONS);;
     };
+    /**
+     * @param {Object} data
+     */
+    function main() {
+      _.defer(function() {
+        findLeftOver();
+        draw(dataStore);
+      });
+    }
+    main();
   });
 }
 

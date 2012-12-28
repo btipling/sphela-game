@@ -19,7 +19,7 @@
 
 <body>
   <iframe class="github"
-    src="http://ghbtns.com/github-btn.html?user=btipling&repo=sphela-risk&type=fork"
+    src="http://ghbtns.com/github-btn.html?user=btipling&repo=sphela-game&type=fork"
     allowtransparency="true" frameborder="0" scrolling="0" width="62"
     height="20"></iframe>
   {{> app}}
@@ -38,7 +38,7 @@
       {{#each leftOverRegions}}
       <li><a href="{{this.id}}" tabindex="-1" class="left-over-region"
         data-id="{{this.id}}"
-        >{{this.id}} {{this.name}}</a>
+        >{{this.name}}</a>
       {{/each}}
     </ul>
   </li>
@@ -79,4 +79,9 @@
     </defs>
     </svg>
   </div>
+  <!-- Uncomment to edit vector config. -->
+  <!--
+  {{> configmaker}}
+  -->
 </template>
+

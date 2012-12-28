@@ -1,0 +1,29 @@
+
+<template name="configmaker">
+  <div class="container region-tool">
+    <div class="selected-region">Selected region: {{selectedRegion}}</div>
+    <div class="set-region">Set region: {{setRegion}}</div>
+    <div class="region-controls">
+      <button id="set-region">Set Region</button>
+      <button id="add-region">Add Region</button>
+      <button id="remove-region">Remove Region</button>
+    </div>
+    <p>Regions in set:</p>
+    <ul class="regions-in-set region-list">
+      {{#each regionsInSet}}
+      <li><a href="/{{this.id}}">{{this.id}} {{this.name}}</a></li>
+      {{/each}}
+    </ul>
+    <textarea class="regionSetJSON"></textarea>
+    <p>Regions with no sets:</p>
+    <div id="regionsWithNoSets"></div>
+  </div>
+</template>
+
+<template name="regionsWithNoSets">
+    <ul class="regions-left region-list">
+      {{#each this}}
+      <li><a href="/{{this.id}}">{{this.id}} {{this.name}}</a></li>
+      {{/each}}
+    </ul>
+</template>
