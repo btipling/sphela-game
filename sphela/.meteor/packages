@@ -14,3 +14,6 @@ handlebars
 backbone
 underscore
 madewith
+accounts-base
+accounts-twitter
+accounts-ui
