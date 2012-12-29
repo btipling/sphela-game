@@ -258,6 +258,10 @@ if (Meteor.isClient) {
         selectRegion(currentRegion);
         return;
       }
+      if (!feature) {
+        // No data yet.
+        return;
+      }
       coords = transitionCoordinates.shift();
       projection.origin(coords);
       circle.origin(coords);
@@ -395,15 +399,11 @@ if (Meteor.isClient) {
     Template.leftOver.leftOverRegions = function(regions) {
       return Session.get(sessionKeys.ALL_REGIONS);;
     };
-    Template.app.wtfLoginId = function() {
-      return Meteor.userId() + ' wtf';
-    };
     /**
      * @param {Object} data
      */
     function main() {
       _.defer(function() {
-        console.log('connected and running main and shit.');
         findLeftOver();
         draw(dataStore);
         Session.set(sessionKeys.CONNECTED, true);
