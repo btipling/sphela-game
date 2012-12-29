@@ -1,4 +1,6 @@
+var global = this;
 if (Meteor.isClient) {
+  Session.set(sessionKeys.CONNECTED, false);
   $(window).ready(function() {
     var circle,
       projection,
@@ -123,8 +125,29 @@ if (Meteor.isClient) {
       var id, data;
       id = window.location.pathname.substr(1);
       data = _.where(dataStore.features, {id: id});
-      selectRegion(data);
+      waitForId(data);
     });
+
+    /**
+     * @param {string} id
+     * @return {Object} The path element.
+     */
+    function getTarget(id) {
+      return $('#' + id).get(0);
+    }
+
+    /**
+     * @param {Object} data
+     */
+    function waitForId(data) {
+      if (!getTarget(_.first(data).id)) {
+        _.defer(function() {
+          waitForId(data);
+        });
+      } else {
+        selectRegion(data);
+      }
+    }
 
     /**
      * @param {string} id
@@ -263,7 +286,7 @@ if (Meteor.isClient) {
       stopZoom();
       currentRegion = regions;
       region = _.first(regions);
-      target = $('#' + region.id).get(0);
+      target = getTarget(region.id);
       d3.selectAll('.clicked').classed('clicked', false);
       d3.select(target).classed('clicked', true);
       // Putting on top of stack.
@@ -372,20 +395,34 @@ if (Meteor.isClient) {
     Template.leftOver.leftOverRegions = function(regions) {
       return Session.get(sessionKeys.ALL_REGIONS);;
     };
+    Template.app.wtfLoginId = function() {
+      return Meteor.userId() + ' wtf';
+    };
     /**
      * @param {Object} data
      */
     function main() {
       _.defer(function() {
+        console.log('connected and running main and shit.');
         findLeftOver();
         draw(dataStore);
+        Session.set(sessionKeys.CONNECTED, true);
       });
     }
-    main();
+    Meteor.subscribe('connect', Meteor.userId(), function () {
+      main();
+    });
   });
 }
-
 if (Meteor.isServer) {
-  Meteor.startup(function() {
+  Meteor.publish('connect', function(userId) {
+    var uuid;
+    uuid = Meteor.uuid();
+    console.log('Publishing games');
+    this.set('games', uuid, global.models.getGame());
+    this.set('rounds', uuid, global.models.currentRound());
+    this.set('players', uuid, player(userId));
+    this.complete();
+    this.flush();
   });
 }

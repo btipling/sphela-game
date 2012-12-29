@@ -1,0 +1,24 @@
+<template name="playerStatus">
+<div class="row player-status">
+  {{> territoryCount}}
+  {{> floatingTroopCount}}
+</div>
+</template>
+
+<template name="territoryCount">
+<div class="player-count span2">
+  <p>Your territories:</p>
+  <div class="count">
+    {{count}}
+  </div>
+</div>
+</template>
+
+<template name="floatingTroopCount">
+<div class="player-count span2">
+  <p>Troops to place:</p>
+  <div class="count">
+    {{count}}
+  </div>
+</div>
+</template>

@@ -10,6 +10,13 @@
 @orange: #FFA45A;
 @lightOrange: #FFE5D0;
 @bg: url(/images/stars.jpg);
+.inner-glow(@blur, @spread, @color) {
+  -webkit-box-shadow: inset 0px 0px @blur @spread @color;
+  -moz-box-shadow: inset 0px 0px @blur @spread @color;
+  -o-box-shadow: inset 0px 0px @blur @spread @color;
+  -ms-box-shadow: inset 0px 0px @blur @spread @color;
+  box-shadow: inset 0px 0px @blur @spread @color;
+}
 html {
   height: 100%;
 }
@@ -19,6 +26,16 @@ body {
   background-size: cover;
   color: @white;
   height: 100%;
+  .inner-glow(15px, 0px, @lightBlue);
+  border-radius: 8px;
+  padding: 0px;
+  margin: 0px;
+}
+a.madewith_badge {
+  border-top-right-radius: 8px;
+  top: 2px;
+  right: 2px;
+  opacity: 0.85;
 }
 h1 {
   font-size: 300%;
@@ -87,4 +104,13 @@ path.clicked {
   bottom: 50px;
   right: 2px;
   z-index: 3;
+}
+.sphela-top {
+  position: relative;
+  z-index: 5;
+}
+.login {
+  position: absolute;
+  right: 290px;
+  top: 5px;
 }

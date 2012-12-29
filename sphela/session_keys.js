@@ -6,6 +6,10 @@ var sessionKeys = (function() {
    */
   return {
     /**
+     * Key for checking if info is ready.
+     */
+    CONNECTED: 'connected',
+    /**
      * Key for setting region in session.
      * @type {string}
      */

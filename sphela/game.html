@@ -1,0 +1,9 @@
+<template name="gameViews">
+    {{#if loggedIn}}
+      {{>playerStatus}}
+    {{else}}
+    <div class="login-prompt">
+      <p>Log in to join the fun.</p>
+    </div>
+    {{/if}}
+</template>
