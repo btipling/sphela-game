@@ -9,6 +9,7 @@
 @brown: #FF695A;
 @orange: #FFA45A;
 @lightOrange: #FFE5D0;
+@gray: #9c9c9c;
 @bg: url(/images/stars.jpg);
 .inner-glow(@blur, @spread, @color) {
   -webkit-box-shadow: inset 0px 0px @blur @spread @color;
@@ -117,4 +118,19 @@ path.clicked {
 .large-text {
   font-size: 200%;
   line-height: 150%;
+}
+.tick-updates {
+  font-size: 50%;
+  color: @gray;
+  &::before {
+    content: '(';
+  }
+  &::after {
+    content: ')';
+  }
+}
+.updates {
+  position: relative;
+  width: auto;
+  clear: both;
 }

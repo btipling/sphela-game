@@ -84,3 +84,40 @@ Meteor.publish('player', function(user) {
     handle.stop();
   });
 });
+
+/**
+ * Publish recent announcements and upates.
+ */
+Meteor.publish('recent-updates', function() {
+  return Updates.find({}, {sort: {when: -1}, limit: 20});
+});
+
+/**
+ * Publish announcements and updates as they happen.
+ * @param {number} round
+ */
+Meteor.publish('round-updates', function(round) {
+  var uuid, handle, self;
+  if (_.isNull(round)) {
+    return;
+  }
+  uuid = Meteor.uuid();
+  console.log('update sub', round);
+  handle = Updates.find({round: round}).observe({
+    changed: _.bind(function(update) {
+      console.log('update changed');
+      this.set('updates', uuid, update);
+      this.flush();
+    }, this),
+    added: _.bind(function(update) {
+      console.log('update added');
+      this.set('updates', uuid, update);
+      this.flush();
+    }, this)
+  });
+  this.complete();
+  this.flush();
+  this.onStop(function() {
+    handle.stop();
+  });
+});

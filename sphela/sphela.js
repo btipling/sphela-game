@@ -2,6 +2,20 @@
  * @fileOverview This draws the main game area and starts the front-end.
  */
 var global = this;
+
+/**
+ * @type {number}
+ * @const
+ */
+global.TICK_INTERVAL = 10000;
+
+/**
+ * @type {number}
+ * @const
+ */
+//global.TICKS_IN_GAME = 720;
+global.TICKS_IN_GAME = 10;
+
 if (Meteor.isClient) {
   Session.set(sessionKeys.CONNECTED, false);
   $(window).ready(function() {

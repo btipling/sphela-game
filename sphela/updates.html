@@ -1,0 +1,14 @@
+<template name="updates">
+  <div class="container updates">
+    <div class="row">
+      <h3 class="span2 pull-right">Updates</h3>
+    </dvi>
+    {{#each updates}}
+    <div class="update row">
+      <div class="span2 pull-right">
+        {{this.message}}
+      </div>
+    </div>
+    {{/each}}
+  </div>
+</template>

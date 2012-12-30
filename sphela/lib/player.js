@@ -1,5 +1,5 @@
-if (Meteor.isClient) {
-  (function() {
+(function() {
+  if (Meteor.isClient) {
 
     Template.territoryCount.count = function() {
       var player;
@@ -46,8 +46,8 @@ if (Meteor.isClient) {
         Meteor.call('joinRound', userId, global.NOOP);
       }
     }
-  })();
-  Meteor.autosubscribe(function() {
-    Meteor.subscribe('player', Meteor.userId());
-  });
-}
+    Meteor.autosubscribe(function() {
+      Meteor.subscribe('player', Meteor.userId());
+    });
+  }
+})();
