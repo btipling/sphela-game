@@ -1,6 +1,5 @@
 var global = this;
   var Games,
-    models,
     Rounds,
     Regions,
     Players;
@@ -9,7 +8,21 @@ var global = this;
   /**
    * @type {Object}
    */
-  models = {};
+
+  /**
+   * Increments or updates tick.
+   * @param {number=} opt_tick
+   */
+  function saveTick(opt_tick) {
+    var game;
+    game = getGame();
+    if (_.isNumber(opt_tick)) {
+      game.tick = opt_tick;
+    } else {
+      game.tick = game.tick += 1;
+    }
+    saveGame(game);
+  }
 
   /**
    * @return {Object}
@@ -18,22 +31,19 @@ var global = this;
     var game;
     game = Games.findOne();
     if (!game) {
-      game = {currentRound: 1};
+      game = {currentRound: 1, tick: 0};
       game._id = Games.insert(game);
     }
     return game;
   }
-  models.getGame = getGame;
 
   /**
    * @return {number}
    */
-  function currentRound() {
+  function currentRoundNumber() {
     var rounds;
-    rounds = Rounds.find({});
     return getGame().currentRound;
   }
-  models.currentRound = currentRound;
 
   /**
    * @param {Object} game
@@ -41,12 +51,10 @@ var global = this;
   function saveGame(game) {
     Games.update({_id: game._id}, game, global.NOOP);
   }
-  models.saveGame = saveGame;
 
   Rounds = new Meteor.Collection('rounds');
 
   function startRound() {
-    console.log('start round');
     var game, currentRound, round;
     game = getGame();
     currentRound = game.currentRound;
@@ -55,6 +63,7 @@ var global = this;
     }
     currentRound++;
     game.currentRound = currentRound;
+    game.tick = 0;
     saveGame(game);
     Rounds.insert({
       round: currentRound,
@@ -63,17 +72,21 @@ var global = this;
     rounds = Rounds.find({});
     var foundIt = false;
   }
-  models.startRound = startRound;
+
+  /**
+   * @return {Round}
+   */
+  function currentRound() {
+    var round;
+    return Rounds.findOne({round:currentRoundNumber()});
+  }
 
   function addPlayerToRound() {
     var round, rounds;
-    rounds = Rounds.find({});
-    round = Rounds.findOne({round: currentRound()});
-    rounds = Rounds.find();
-    rounds.numPlayers += 1;
-    Rounds.update({_id: round._id}, rounds, global.NOOP);
+    round = Rounds.findOne({round: currentRoundNumber()});
+    round.numPlayers += 1;
+    Rounds.update({_id: round._id}, round);
   }
-  models.addPlayerToRound = addPlayerToRound;
 
 
   Regions = new Meteor.Collection('regions');
@@ -84,7 +97,6 @@ var global = this;
    */
   function setRegionOwner(regionId, user) {
   }
-  models.setRegionOwner = setRegionOwner;
 
   /**
    * @param {string} regionId
@@ -92,7 +104,6 @@ var global = this;
    */
   function setRegionTroopCount(regionId, troopCount) {
   }
-  models.setRegionTroopCount = setRegionTroopCount;
 
   /**
    * @param {string} regionId
@@ -100,7 +111,6 @@ var global = this;
    */
   function regionOwner(regionId) {
   }
-  models.regionOwner = regionOwner;
 
   /**
    * @param {string} regionId
@@ -108,7 +118,6 @@ var global = this;
    */
   function regionTroopCount(regionId) {
   }
-  models.regionTroopCount = regionTroopCount;
 
   /**
    * Players store additional game information for users.
@@ -121,21 +130,18 @@ var global = this;
    */
   function player(user) {
     var player, round;
-    player = Players.findOne({userid: user})
+    if (!_.isString(user)) {
+      return;
+    }
+    player = Players.findOne({userId: user})
     if (!player) {
       player = {
         floatingTroops: 5,
         regions: [],
-        userid: user,
+        userId: user,
         currentRound: 0
       };
       player._id = Players.insert(player);
-    }
-    round  = currentRound();
-    if (player.currentRound !== round) {
-      addPlayerToRound();
-      player.currentRound = round;
-      Players.update({_id: player._id}, player, global.NOOP);
     }
     return player;
   }
@@ -150,7 +156,6 @@ var global = this;
     players.forEach(doSomething);
   }
   if (Meteor.isServer) {
-    models.forEachPlayer = forEachPlayer;
   }
 
   /**
@@ -159,7 +164,6 @@ var global = this;
    */
   function setPlayerRegions(user, regions) {
   }
-  models.setPlayerRegions = setPlayerRegions;
 
   /**
    * @param {string} user
@@ -167,7 +171,6 @@ var global = this;
    */
   function setPlayerTotalTroops(user, troops) {
   }
-  models.setPlayerTotalTroops = setPlayerTotalTroops;
 
   /**
    * @param {string} user
@@ -175,7 +178,6 @@ var global = this;
    */
   function setPlayerFloatingTroops(user, troops) {
   }
-  models.setPlayerFloatingTroops = setPlayerFloatingTroops();
 
   /**
    * @param {string} user
@@ -184,7 +186,6 @@ var global = this;
   function playerRegions(user) {
     return player(user).regions;
   }
-  models.playerRegions = playerRegions;
 
   /**
    * @param {string} user
@@ -192,7 +193,6 @@ var global = this;
    */
   function playerTotalTroops(user) {
   }
-  models.playerTotalTroops = playerTotalTroops;
 
   /**
    * @param {string}
@@ -201,6 +201,4 @@ var global = this;
   function playerFloatingTroops(user) {
     return player(user).floatingTroops;
   }
-  models.playerFloatingTroops = playerFloatingTroops;
 
-  global.models = models;

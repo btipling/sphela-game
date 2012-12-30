@@ -1,3 +1,6 @@
+/**
+ * @fileOverview This draws the main game area and starts the front-end.
+ */
 var global = this;
 if (Meteor.isClient) {
   Session.set(sessionKeys.CONNECTED, false);
@@ -412,17 +415,5 @@ if (Meteor.isClient) {
     Meteor.subscribe('connect', Meteor.userId(), function () {
       main();
     });
-  });
-}
-if (Meteor.isServer) {
-  Meteor.publish('connect', function(userId) {
-    var uuid;
-    uuid = Meteor.uuid();
-    console.log('Publishing games');
-    this.set('games', uuid, global.models.getGame());
-    this.set('rounds', uuid, global.models.currentRound());
-    this.set('players', uuid, player(userId));
-    this.complete();
-    this.flush();
   });
 }

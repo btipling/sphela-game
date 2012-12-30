@@ -23,8 +23,9 @@
 
   function runTick() {
     currentTick += 1;
+    saveTick(currentTick);
     console.log('Tick!','tick:', currentTick, 'round:',
-        global.models.currentRound());
+        currentRoundNumber());
     if (currentTick > TICKS_IN_GAME) {
       endGame();
       return;
@@ -34,11 +35,12 @@
 
   function endGame() {
     currentTick = 0;
+    startRound();
   }
 
   if (Meteor.isServer) {
     Meteor.startup(function() {
-      models.startRound();
+      startRound();
       Meteor.setInterval(runTick, TICK_INTERVAL);
     });
   }

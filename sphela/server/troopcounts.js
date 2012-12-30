@@ -2,7 +2,7 @@
 (function () {
   function updateTroopCounts() {
     console.log('updating troop counts!');
-    global.models.forEachPlayer(function(player) {
+    forEachPlayer(function(player) {
       //For each region owned add troops.
         //For a region owned:
           // Increment troops with min region num.
