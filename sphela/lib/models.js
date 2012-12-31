@@ -3,12 +3,14 @@ var global,
   Rounds,
   Regions,
   Players,
+  PlayerRounds,
   Updates;
 
 global = this;
 
 /**
  * Games is collection with only one item, the game state.
+ * @type {Meteor.Collection}
  */
 Games = new Meteor.Collection('games');
 
@@ -53,6 +55,19 @@ function currentRoundNumber() {
 }
 
 /**
+ * Doesn't create a game if it doesn't exist.
+ * @return {number}
+ */
+function clientCurrentRoundNumber() {
+  var game;
+  game = Games.findOne();
+  if (!game) {
+    return 0;
+  }
+  return game.currentRound;
+}
+
+/**
  * @param {Object} game
  */
 function saveGame(game) {
@@ -63,6 +78,7 @@ function saveGame(game) {
  * Rounds store information about the round, a round
  * is updated when it is active. Previous rounds serve
  * historical information needs.
+ * @type {Meteor.Collection}
  */
 Rounds = new Meteor.Collection('rounds');
 
@@ -103,6 +119,7 @@ function addPlayerToRound() {
 
 /**
  * Regions store information about existing region states.
+ * @type {Meteor.Collection}
  */
 Regions = new Meteor.Collection('regions');
 
@@ -136,25 +153,25 @@ function regionTroopCount(regionId) {
 
 /**
  * Players store additional game information for users.
+ * @type {Meteor.Collection}
  */
 Players = new Meteor.Collection('players');
 
 /**
- * @param {string} user The user id.
+ * @param {string} userId The user id.
  * @return {Object} player
  */
-function player(user) {
+function player(userId) {
   var player, round;
-  if (!_.isString(user)) {
+  if (!_.isString(userId)) {
     return;
   }
-  player = Players.findOne({userId: user})
+  player = Players.findOne({userId: userId})
   if (!player) {
     player = {
-      floatingTroops: 5,
-      regions: [],
-      userId: user,
-      currentRound: 0
+      signedUp: new Date().getTime(),
+      userId: userId,
+      rounds: []
     };
     player._id = Players.insert(player);
   }
@@ -162,66 +179,10 @@ function player(user) {
 }
 
 /**
- * Iterate over all players and do something to them.
- * @param {Function} doSomething
- */
-function forEachPlayer(doSomething) {
-  var players;
-  players = Players.find();
-  players.forEach(doSomething);
-}
-if (Meteor.isServer) {
-}
-
-/**
- * @param {string} user
- * @param {Array.<string>} regions
- */
-function setPlayerRegions(user, regions) {
-}
-
-/**
- * @param {string} user
- * @param {number} troops
- */
-function setPlayerTotalTroops(user, troops) {
-}
-
-/**
- * @param {string} user
- * @param {number} troops
- */
-function setPlayerFloatingTroops(user, troops) {
-}
-
-/**
- * @param {string} user
- * @return {Array.<string> regions
- */
-function playerRegions(user) {
-  return player(user).regions;
-}
-
-/**
- * @param {string} user
- * @return {number} troops
- */
-function playerTotalTroops(user) {
-}
-
-/**
- * @param {string}
- * @return {Array.<string> troops
- */
-function playerFloatingTroops(user) {
-  return player(user).floatingTroops;
-}
-
-
-/**
  * Updates are messages that appear on the game site.
  * They are public announcements such as users joining,
  * territory wins, ticks etc.
+ * @type {Meteor.Collection}
  */
 Updates = new Meteor.Collection('updates');
 
@@ -246,6 +207,89 @@ function addMessage(message, opt_type, opt_when) {
     round: round,
     when: when,
   }, global.NOOP);
-  console.log('finished adding message');
+}
+
+/**
+ * Player information for a round.
+ * @type {Array.<Meteor.Collection>}
+ */
+PlayerRounds = new Meteor.Collection('playerRounds');
+
+/**
+ * Initialize a user's player round.
+ * @param {string} userId
+ * @param {number} round
+ */
+function addPlayerToPlayerRound(userId, round) {
+  var playerRound, initialCount;
+  playerRound = PlayerRounds.findOne({userId: userId, round: round});
+  initialCount = {count: 5, time: new Date().getTime()};
+  if (!playerRound) {
+    playerRound = {
+      round: round,
+      userId: userId,
+      totalTroops: [initialCount],
+      floatingTroops: [initialCount],
+      regionCount: [{count: 0, time: new Date().getTime()}],
+      regions: []
+    };
+    playerRound._id = PlayerRounds.insert(playerRound);
+  }
+  return playerRound;
+}
+
+/**
+ * @param {string} userId
+ * @param {number} round
+ * @param {Array.<string>} regions
+ */
+function setPlayerRegions(userId, round, regions) {
+}
+
+/**
+ * @param {string} userId
+ * @param {number} round
+ * @param {number} troops
+ */
+function setPlayerTotalTroops(userId, round, troops) {
+}
+
+/**
+ * @param {string} userId
+ * @param {number} round
+ * @param {number} troops
+ */
+function setPlayerFloatingTroops(userId, round, troops) {
+}
+
+/**
+ * @param {string} userId
+ * @param {number} round
+ * @return {Array.<string> regions
+ */
+function playerRegions(userId, round) {
+  return 0;
+}
+
+/**
+ * @param {string} userId
+ * @param {number} round
+ * @return {number} troops
+ */
+function playerTotalTroops(userId, round) {
+}
+
+/**
+ * @param {string} userId
+ * @param {number} round
+ * @return {Array.<string> troops
+ */
+function playerFloatingTroops(userId, round) {
+  var playerRound, playerRound;
+  playerRound = PlayerRounds.findOne({userId: userId, round: round});
+  if (!playerRound) {
+    return 0;
+  }
+  return _.last(playerRound.floatingTroops).count;
 }
 

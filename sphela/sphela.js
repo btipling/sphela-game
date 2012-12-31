@@ -7,7 +7,7 @@ var global = this;
  * @type {number}
  * @const
  */
-global.TICK_INTERVAL = 10000;
+global.TICK_INTERVAL = 100000;
 
 /**
  * @type {number}
@@ -400,11 +400,30 @@ if (Meteor.isClient) {
       selectRegion(data);
     }
 
+    /**
+     * @param {Object} event
+     */
+    function handleSubmitChat(event) {
+      event.preventDefault();
+      var message, userId, input;
+      input = $('.chat-update');
+      message = $.trim(input.val());
+      input.val('');
+      userId = Meteor.userId();
+      if (userId) {
+        Meteor.call('say', userId, message, global.NOOP);
+      }
+    }
+
     Template.app.events({
       'click path': handlePath,
       'click .zoom-in': handleZoomIn,
       'click .zoom-out': handleZoomOut,
-      'click .left-over-region': handleRegionClick
+      'click .left-over-region': handleRegionClick,
+    });
+
+    Template.chatInput.events({
+      'submit .update-chatbox': handleSubmitChat
     });
 
     Template.region.regionName = function() {

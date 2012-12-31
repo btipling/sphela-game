@@ -26,7 +26,6 @@
       $('.tick-updates').text(seconds);
     }
     updateSecondsUntilTick();
-
     Template.gameViews.loggedIn = function() {
       if (Session.get(sessionKeys.CONNECTED)) {
         return !!Meteor.user();
@@ -34,18 +33,15 @@
       return false;
     };
     Template.gameInfo.round = function() {
-      var game;
-      game = Games.findOne();
+      var round;
       nextTick = global.TICK_INTERVAL/1000;
-      return game ? game.currentRound : 0;
+      round = clientCurrentRoundNumber();
+      Session.set('currentRound', round);
+      return round;
     };
     Template.gameInfo.playerCount = function() {
-      var game, round;
-      game = Games.findOne();
-      if (!game) {
-        return 0;
-      }
-      round = Rounds.findOne({round: game.currentRound});
+      var round;
+      round = Rounds.findOne({round: clientCurrentRoundNumber()});
       return round ? round.numPlayers : 0;
     };
     Template.gameInfo.tick = function() {

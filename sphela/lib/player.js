@@ -2,15 +2,11 @@
   if (Meteor.isClient) {
 
     Template.territoryCount.count = function() {
-      var player;
-      player = Players.findOne({userId: Meteor.userId()});
-      return player.regions.length;
+      return playerRegions(Meteor.userId(), clientCurrentRoundNumber());
     }
 
     Template.floatingTroopCount.count = function() {
-      var player;
-      player = Players.findOne({userId: Meteor.userId()});
-      return player.floatingTroops;
+      return playerFloatingTroops(Meteor.userId(), clientCurrentRoundNumber());
     };
 
     Template.playerStatus.isPlaying = function() {
@@ -21,16 +17,15 @@
         return false;
       }
       player = Players.findOne({userId: userId});
-      return player ? player.currentRound === game.currentRound : false;
+      if (!player) {
+        return false;
+      }
+      return _.indexOf(player.rounds, game.currentRound) !== -1;
     };
 
     Template.playerStatus.round = function() {
-      var round, game;
-      game = Games.findOne();
-      if (!game) {
-        return 0;
-      }
-      round = Rounds.findOne({round: game.currentRound});
+      var round;
+      round = Rounds.findOne({round: clientCurrentRoundNumber()});
       return round ? round.round : 0;
     }
     Template.playerStatus.events({
@@ -41,6 +36,7 @@
      */
     function joinRound(event) {
       var userId;
+      console.log('joinRound');
       userId = Meteor.userId();
       if (userId) {
         Meteor.call('joinRound', userId, global.NOOP);
@@ -48,6 +44,10 @@
     }
     Meteor.autosubscribe(function() {
       Meteor.subscribe('player', Meteor.userId());
+    });
+    Meteor.autosubscribe(function() {
+      Meteor.subscribe('player-round-updates', Meteor.userId(),
+        Session.get('currentRound'));
     });
   }
 })();

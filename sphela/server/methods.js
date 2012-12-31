@@ -4,16 +4,43 @@
 Meteor.methods({
   /**
    * When a user joins the round the client calls this method.
-   * @param {string} user The user's id.
+   * @param {string} userId The user's id.
    */
-  joinRound: function(user) {
-    var player, round;
-    round = currentRound();
-    player = Players.findOne({userId: user});
-    if (player.currentRound !== round.round) {
-      player.currentRound = round.round;
-      Players.update({userId: user}, player, global.NOOP);
-      addPlayerToRound();
+  joinRound: function(userId) {
+    var player, playerRound, round, user;
+    round = currentRoundNumber();
+    player = Players.findOne({userId: userId});
+    user = Meteor.users.findOne({_id: userId});
+    if (!user) {
+      return;
     }
+    if (_.indexOf(player.rounds, round) === -1) {
+      player.rounds.push(round);
+      Players.update({userId: userId}, player, global.NOOP);
+      addPlayerToPlayerRound(userId, round);
+      addPlayerToRound();
+      addMessage([
+        user.profile.name,
+        'has joined round',
+        round + '!',
+      ].join(' '));
+    }
+  },
+  /**
+   * User adds a chat message to updates.
+   * @param {string} userId
+   * @param {string} message
+   */
+  say: function(userId, message) {
+    var user;
+    user = Meteor.users.findOne({_id: userId});
+    if (!user || message.length === 0) {
+      return;
+    }
+    addMessage([
+      user.profile.name,
+      ': ',
+      message
+    ].join(''), 'chat');
   }
 });

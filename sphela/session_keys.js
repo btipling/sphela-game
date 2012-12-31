@@ -23,6 +23,11 @@ var sessionKeys = (function() {
      * Key for set region.
      * @type {string}
      */
-    SET_REGION: 'setRegion'
+    SET_REGION: 'setRegion',
+    /**
+     * Key for current round.
+     * @type {string}
+     */
+     CURRENT_ROUND: 'currentRound'
   };
 })();

@@ -85,5 +85,15 @@
   {{!Uncomment to add config maker.}}
   {{!> configmaker}}
   {{>gameViews}}
+  {{>chatInput}}
+</template>
+
+<template name="chatInput">
+  <form class="update-chatbox container">
+    <input type="text" class="chat-update"
+    {{#unless currentUser}}disabled="disabled"{{/unless}}/>
+    <input type="submit" class="btn submit-chat" value="chat"
+    {{#unless currentUser}}disabled="disabled"{{/unless}}/>
+  </form>
 </template>
 

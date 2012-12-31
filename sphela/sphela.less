@@ -9,7 +9,8 @@
 @brown: #FF695A;
 @orange: #FFA45A;
 @lightOrange: #FFE5D0;
-@gray: #9c9c9c;
+@gray: #9C9C9C;
+@lightGray: #CCC;
 @bg: url(/images/stars.jpg);
 .inner-glow(@blur, @spread, @color) {
   -webkit-box-shadow: inset 0px 0px @blur @spread @color;
@@ -102,7 +103,7 @@ path.clicked {
 }
 .github {
   position: absolute;
-  bottom: 50px;
+  top: 40px;
   right: 2px;
   z-index: 3;
 }
@@ -130,7 +131,32 @@ path.clicked {
   }
 }
 .updates {
-  position: relative;
-  width: auto;
-  clear: both;
+  position: absolute;
+  width: 400px;
+  right: 15px;
+  bottom: 80px;
+  text-align: right;
+}
+.update-chatbox {
+  position: absolute;
+  width: 400px;
+  height: 50px;
+  right: 15px;
+  bottom: 10px;
+  text-align: right;
+  input {
+    margin-bottom: 0px;
+  }
+}
+.updates-container {
+  height: 200px;
+  overflow-x: hidden;
+  overfloy-y: auto;
+}
+.update-info {
+  color: @lightGray;
+}
+.update-chat {
+  text-align: left;
+  color: @blue;
 }

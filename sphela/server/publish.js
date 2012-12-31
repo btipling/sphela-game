@@ -102,16 +102,37 @@ Meteor.publish('round-updates', function(round) {
     return;
   }
   uuid = Meteor.uuid();
-  console.log('update sub', round);
   handle = Updates.find({round: round}).observe({
-    changed: _.bind(function(update) {
-      console.log('update changed');
+    added: _.bind(function(update) {
       this.set('updates', uuid, update);
       this.flush();
+    }, this)
+  });
+  this.complete();
+  this.flush();
+  this.onStop(function() {
+    handle.stop();
+  });
+});
+
+/**
+ * Publish player round information.
+ * @param {string} userId
+ * @param {number} round
+ */
+Meteor.publish('player-round-updates', function(userId, round) {
+  var uuid, handle, self;
+  if (!userId || !round) {
+    return;
+  }
+  uuid = Meteor.uuid();
+  handle = PlayerRounds.find({userId: userId, round: round}).observe({
+    changed: _.bind(function(round) {
+      this.set('playerRounds', uuid, round);
+      this.flush();
     }, this),
-    added: _.bind(function(update) {
-      console.log('update added');
-      this.set('updates', uuid, update);
+    added: _.bind(function(round) {
+      this.set('playerRounds', uuid, round);
       this.flush();
     }, this)
   });

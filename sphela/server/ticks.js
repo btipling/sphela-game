@@ -14,6 +14,7 @@ var global = this;
     saveTick(currentTick);
     message = [
       'Tick!', 'tick:', currentTick, 'round:', currentRoundNumber()].join(' ');
+    console.log('adding tick message');
     addMessage(message);
     if (currentTick > TICKS_IN_GAME) {
       endGame();
