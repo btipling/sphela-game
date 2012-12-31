@@ -95,9 +95,8 @@ function startRound() {
   saveGame(game);
   Rounds.insert({
     round: currentRound,
-    numPlayers: 0
+    numPlayers: [{count: 0, when: new Date().getTime()}]
   });
-  rounds = Rounds.find({});
   addMessage('New round ' + currentRound + ' started!');
 }
 
@@ -112,7 +111,10 @@ function currentRound() {
 function addPlayerToRound() {
   var round, rounds;
   round = Rounds.findOne({round: currentRoundNumber()});
-  round.numPlayers += 1;
+  round.numPlayers.push({
+    count: _.last(round.numPlayers).count + 1,
+    when: new Date().getTime()
+  });
   Rounds.update({_id: round._id}, round);
 }
 

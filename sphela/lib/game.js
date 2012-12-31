@@ -42,7 +42,7 @@
     Template.gameInfo.playerCount = function() {
       var round;
       round = Rounds.findOne({round: clientCurrentRoundNumber()});
-      return round ? round.numPlayers : 0;
+      return round ? _.last(round.numPlayers).count : 0;
     };
     Template.gameInfo.tick = function() {
       var game;

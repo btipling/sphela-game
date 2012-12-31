@@ -1,6 +1,11 @@
 <template name="playerStatus">
 <div class="row player-status">
   {{#if isPlaying}}
+    {{#if hasTerritory}}
+      {{> territoryWarScreen}}
+    {{else}}
+      {{> dropWarScreen}}
+    {{/if}}
     {{> territoryCount}}
     {{> floatingTroopCount}}
   {{else}}
@@ -9,6 +14,28 @@
   </div>
   {{/if}}
 </div>
+</template>
+
+<template name="territoryWarScreen">
+  Territory War Screen.
+</template>
+
+<template name="dropWarScreen">
+  <div class="container">
+    {{#if hasTroops}}
+    <p class="span4">
+    As you currently have no territories, you can attack any region with a minimum contingent.
+    Select a territory to attack to begin, then attack.
+    </p>
+    <button class="btn drop-attack" {{#unless hasSelection}}disabled="disabled"{{/unless}}>
+      Deploy attack.
+    </button>
+    {{else}}
+    <p class="span4">
+    You currently have no troops, so you cannot attack. You must wait for the next tick for resupply.
+    </p>
+    {{/if}}
+  </div>
 </template>
 
 <template name="territoryCount">

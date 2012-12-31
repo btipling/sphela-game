@@ -5,10 +5,23 @@
       return playerRegions(Meteor.userId(), clientCurrentRoundNumber());
     }
 
-    Template.floatingTroopCount.count = function() {
+    /**
+     * @return {number}
+     */
+    function getFloatingTroopsCount() {
       return playerFloatingTroops(Meteor.userId(), clientCurrentRoundNumber());
+    }
+
+    /**
+     * @return {number}
+     */
+    Template.floatingTroopCount.count = function() {
+      return getFloatingTroopsCount();
     };
 
+    /**
+     * @return {boolean}
+     */
     Template.playerStatus.isPlaying = function() {
       var game, player, userId;
       game = Games.findOne();
@@ -23,6 +36,9 @@
       return _.indexOf(player.rounds, game.currentRound) !== -1;
     };
 
+    /**
+     * @return {number}
+     */
     Template.playerStatus.round = function() {
       var round;
       round = Rounds.findOne({round: clientCurrentRoundNumber()});
@@ -31,6 +47,38 @@
     Template.playerStatus.events({
       'click .join-round': joinRound
     });
+
+    /**
+     * @return {boolean}
+     */
+    Template.dropWarScreen.hasTroops = function() {
+      return getFloatingTroopsCount() > 0;
+    };
+
+    /**
+     * @return {boolean}
+     */
+    Template.dropWarScreen.hasSelection = function() {
+      return !!Session.get('selectedRegion');
+    };
+
+    /**
+     * @param {Object} event
+     */
+    function handleDropAttack(event) {
+      var region, userId;
+      console.log('dropping attack on', Session.get('selectedRegion'));
+      region = Session.get('selectedRegion');
+      userId = Meteor.userId();
+      if (userId && region) {
+        Meteor.call('dropAttack', userId, region.id, global.NOOP);
+      }
+    }
+
+    Template.dropWarScreen.events({
+      'click .drop-attack': handleDropAttack
+    });
+
     /**
      * @param {Object} event
      */
