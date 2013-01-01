@@ -310,7 +310,6 @@ if (Meteor.isClient) {
     function selectRegion(regions) {
       var region, pixel, coords, target, parent;
       stopZoom();
-      currentRegion = regions;
       region = _.first(regions);
       target = getTarget(region.id);
       d3.selectAll('.clicked').classed('clicked', false);
