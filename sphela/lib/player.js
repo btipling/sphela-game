@@ -37,19 +37,27 @@
     };
 
     /**
-     * @return {boolean}
+     * @return {Object} Returns the player round or null.
      */
-    Template.playerStatus.hasTerritory = function() {
-      var playerRound, userId, game, regions;
+    function getPlayerRound() {
+      var userId, game;
       userId = Meteor.userId();
       if (!userId) {
-        return false;
+        return null;
       }
       game = Games.findOne();
       if (!game) {
-        return false;
+        return null;
       }
-      playerRound = PlayerRounds.findOne({userId: userId, round: game.currentRound});
+      return PlayerRounds.findOne({userId: userId, round: game.currentRound});
+    }
+
+    /**
+     * @return {boolean}
+     */
+    Template.playerStatus.hasTerritory = function() {
+      var playerRound, regions;
+      playerRound = getPlayerRound();
       if (!playerRound) {
         return false;
       }
@@ -59,7 +67,6 @@
       }
       return !!regions.length;
     };
-
 
     /**
      * @return {number}
@@ -92,7 +99,6 @@
      */
     function handleDropAttack(event) {
       var region, userId;
-      console.log('dropping attack on', Session.get('selectedRegion'));
       region = Session.get('selectedRegion');
       userId = Meteor.userId();
       if (userId && region) {
@@ -105,11 +111,23 @@
     });
 
     /**
+     * @return {string}
+     */
+    Template.playerColor.color = function() {
+      var playerRound;
+      playerRound = getPlayerRound();
+      if (!playerRound) {
+        return '#FFF';
+      }
+      return playerRound.color;
+    };
+
+
+    /**
      * @param {Object} event
      */
     function joinRound(event) {
       var userId;
-      console.log('joinRound');
       userId = Meteor.userId();
       if (userId) {
         Meteor.call('joinRound', userId, global.NOOP);

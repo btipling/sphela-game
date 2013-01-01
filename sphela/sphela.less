@@ -1,4 +1,4 @@
-@black: #000;
+@black: #333;
 @white: #FFF;
 @blue: #5AC9FF;
 @lightBlue: #B9D2DE;
@@ -167,4 +167,28 @@ path.clicked {
 .game-info {
   text-align: right;
   margin-right: 10px;
+}
+.player-status {
+  position: absolute;
+  bottom: 50px;
+  left: 20px;
+  margin: 20px;
+  max-width: 300px;
+}
+.player-color-container {
+  height: 25px;
+  line-height: 25px;
+  margin: 10px 0;
+}
+.player-color {
+  display: inline-block;
+  width: 25px;
+  height: 25px;
+  vertical-align: middle;
+  border: 3px solid @black;
+}
+.player-count {
+  .count {
+    font-size: 300%;
+  }
 }

@@ -6,6 +6,8 @@
     {{else}}
       {{> dropWarScreen}}
     {{/if}}
+    {{> playerColor}}
+    {{> playerMessages}}
     {{> territoryCount}}
     {{> floatingTroopCount}}
   {{else}}
@@ -16,14 +18,36 @@
 </div>
 </template>
 
+<template name="playerColor">
+  <div class="span2">
+    <div class="player-color-container">
+      Your color:
+      <span class="player-color" style="background-color:{{color}}"></span>
+    </div>
+  </div>
+</template>
+
+<template name="playerMessages">
+  <div class="player-messages-container span2">
+    <h3>Your messages</h3>
+    <div class="player-messages">
+      {{#each messages}}
+      <div class="player-message">Foo</div>
+      {{/each}}
+    </div>
+  </div>
+</template>
+
 <template name="territoryWarScreen">
-  Territory War Screen.
+  <div class="span4">
+    Territory War Screen.
+  </div>
 </template>
 
 <template name="dropWarScreen">
-  <div class="container">
+  <div class="drop-war-screen span4">
     {{#if hasTroops}}
-    <p class="span4">
+    <p>
     As you currently have no territories, you can attack any region with a minimum contingent.
     Select a territory to attack to begin, then attack.
     </p>
@@ -31,7 +55,7 @@
       Deploy attack.
     </button>
     {{else}}
-    <p class="span4">
+    <p>
     You currently have no troops, so you cannot attack. You must wait for the next tick for resupply.
     </p>
     {{/if}}

@@ -103,6 +103,8 @@ function startRound() {
   Rounds.insert({
     round: currentRound,
     regions: {},
+    players: [], //A list of userIds.
+    playerInfo: {}, //A map of userId to game info.
     numPlayers: [{count: 0, when: new Date().getTime()}]
   });
   addMessage('New round ' + currentRound + ' started!');
@@ -116,13 +118,26 @@ function currentRound() {
   return Rounds.findOne({round:currentRoundNumber()});
 }
 
-function addPlayerToRound() {
+/**
+ * @param {string} userId
+ * @param {string} name
+ * @param {string} color
+ */
+function addPlayerToRound(userId, name, color) {
   var round, rounds;
   round = currentRound();
+  if (_.has(round.playerInfo, userId)) {
+    return;
+  }
   round.numPlayers.push({
     count: _.last(round.numPlayers).count + 1,
     when: new Date().getTime()
   });
+  round.playerInfo[userId] = {
+    regions: [],
+    name: name,
+    color: color
+  };
   Rounds.update({_id: round._id}, round);
 }
 
@@ -240,11 +255,13 @@ Updates = new Meteor.Collection('updates');
 /**
  * @param {string} message
  * @param {string=} opt_type
+ * @param {string=} opt_userId
  * @param {Date=} opt_when
  */
-function addMessage(message, opt_type, opt_when) {
+function addMessage(message, opt_type, opt_userId, opt_when) {
   var game, round, when;
   message = message.substr(0, MAX_MESSAGE_LENGTH);
+  console.log('addMessage:', message);
   game = Games.findOne();
   if (!game) {
     round = 0;
@@ -256,6 +273,7 @@ function addMessage(message, opt_type, opt_when) {
     message: message,
     type: opt_type || 'info',
     round: round,
+    userId: opt_userId || null,
     when: when,
   }, global.NOOP);
 }
@@ -270,6 +288,7 @@ PlayerRounds = new Meteor.Collection('playerRounds');
  * Initialize a user's player round.
  * @param {string} userId
  * @param {number} round
+ * @return {Object} The player round.
  */
 function addPlayerToPlayerRound(userId, round) {
   var playerRound, initialCount;
@@ -282,12 +301,25 @@ function addPlayerToPlayerRound(userId, round) {
       totalTroops: [initialCount],
       floatingTroops: [initialCount],
       messages: [],
+      color: getRandomColor(),
       regionCount: [{count: 0, time: new Date().getTime()}],
       regions: []
     };
     playerRound._id = PlayerRounds.insert(playerRound);
   }
   return playerRound;
+}
+
+/**
+ * @return {string} A hexidecimal color.
+ */
+function getRandomColor() {
+  var color, i;
+  color = ['#'];
+  for (i = 0; i < 6; i++ ) {
+    color.push((Math.floor(Math.random() * 16)).toString(16));
+  }
+  return color.join('');
 }
 
 /**
@@ -339,7 +371,7 @@ function setPlayerFloatingTroops(userId, round, troops) {
  * @param {string} region
  */
 function addToPlayerRegions(userId, round, region) {
-  var playerRound;
+  var playerRound, round_, region;
   playerRound = PlayerRounds.findOne({userId: userId, round: round});
   if (!playerRound) {
     return;
@@ -350,6 +382,12 @@ function addToPlayerRegions(userId, round, region) {
     when: new Date().getTime()
   });
   PlayerRounds.update({_id: playerRound._id}, playerRound, global.NOOP);
+  round_ = currentRound();
+  regions = round_.playerInfo[userId].regions;
+  if (_.indexOf(regions, region) === -1) {
+    round_.playerInfo[userId].regions.push(region);
+    Rounds.update({_id: round_._id}, round_, global.NOOP);
+  }
 };
 
 /**
@@ -358,7 +396,7 @@ function addToPlayerRegions(userId, round, region) {
  * @param {string} region
  */
 function removeFromPlayerRegions(userId, round, region) {
-  var playerRound;
+  var playerRound, round_, regions;
   playerRound = PlayerRounds.findOne({userId: userId, round: round});
   if (!playerRound) {
     return;
@@ -369,6 +407,10 @@ function removeFromPlayerRegions(userId, round, region) {
     when: new Date().getTime()
   });
   PlayerRounds.update({_id: playerRound._id}, playerRound, global.NOOP);
+  round_ = currentRound();
+  regions = round_.playerInfo[userId].regions;
+  round_.playerInfo[userId].regions = _.without(regions, [region]);
+  Rounds.update({_id: round_._id}, round_, global.NOOP);
 };
 
 /**

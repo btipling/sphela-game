@@ -42,6 +42,7 @@
     Template.gameInfo.playerCount = function() {
       var round;
       round = Rounds.findOne({round: clientCurrentRoundNumber()});
+      updateRegionColors(round);
       return round ? _.last(round.numPlayers).count : 0;
     };
     Template.gameInfo.tick = function() {
@@ -49,6 +50,20 @@
       game = Games.findOne();
       return (game ? game.tick : 0).toString() + '/' + global.TICKS_IN_GAME;
     };
+    /**
+     * Update all regions with the color of the current owner.
+     * @param {Object} round
+     */
+    function updateRegionColors(round) {
+      if (!round) {
+        return;
+      }
+      _.each(round.playerInfo, function(player) {
+        _.each(player.regions, function(region) {
+          $('#' + region).css('fill', player.color);
+        });
+      });
+    }
     Meteor.subscribe('tick');
     Meteor.subscribe('round');
   }

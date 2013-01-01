@@ -33,13 +33,13 @@
       if (_.indexOf(player.rounds, round) === -1) {
         player.rounds.push(round);
         Players.update({userId: userId}, player, global.NOOP);
-        addPlayerToPlayerRound(userId, round);
-        addPlayerToRound();
+        playerRound = addPlayerToPlayerRound(userId, round);
+        addPlayerToRound(userId, username, playerRound.color);
         addMessage([
           username,
           'has joined round',
           round + '.',
-        ].join(' '));
+        ].join(' '), 'join', userId);
       }
     },
     /**
@@ -60,7 +60,7 @@
         username,
         ': ',
         message
-      ].join(''), 'chat');
+      ].join(''), 'chat', userId);
     },
     /**
      * Drop attack on a region.

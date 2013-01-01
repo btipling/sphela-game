@@ -157,6 +157,9 @@ if (Meteor.isClient) {
      * @param {Object} data
      */
     function waitForId(data) {
+      if (!data || _.isEmpty(data)) {
+        return;
+      }
       if (!getTarget(_.first(data).id)) {
         _.defer(function() {
           waitForId(data);
