@@ -7,7 +7,7 @@ var global = this;
  * @type {number}
  * @const
  */
-global.TICK_INTERVAL = 30000;
+global.TICK_INTERVAL = 3000;
 
 /**
  * @type {number}
@@ -34,8 +34,7 @@ if (Meteor.isClient) {
       COORD_PRECISION,
       SCALE,
       ORIGIN,
-      PRECISION,
-      COLORS;
+      PRECISION;
 
     /**
      * @type {Array.<string>}
@@ -310,6 +309,8 @@ if (Meteor.isClient) {
     function selectRegion(regions) {
       var region, pixel, coords, target, parent;
       stopZoom();
+      // currentRegion is a shared variable.
+      currentRegion = regions;
       region = _.first(regions);
       target = getTarget(region.id);
       d3.selectAll('.clicked').classed('clicked', false);

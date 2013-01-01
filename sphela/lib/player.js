@@ -137,6 +137,9 @@
       Meteor.subscribe('player', Meteor.userId());
     });
     Meteor.autosubscribe(function() {
+      if (typeof clearClientRound !== 'undefined') {
+        clearClientRound();
+      }
       Meteor.subscribe('player-round-updates', Meteor.userId(),
         Session.get('currentRound'));
     });
