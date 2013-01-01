@@ -133,6 +133,18 @@
       return playerRound.color;
     };
 
+    /**
+     * @return {Array.<Object>}
+     */
+    Template.playerMessages.messages = function() {
+      var playerRound;
+      playerRound = getPlayerRound();
+      if (!playerRound) {
+        return [];
+      }
+      return playerRound.messages;
+    };
+
     Meteor.autosubscribe(function() {
       Meteor.subscribe('player', Meteor.userId());
     });

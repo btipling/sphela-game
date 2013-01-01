@@ -64,13 +64,13 @@ var combat = {};
           'has dropped on',
           regionObj.name + '.'
       ].join(' '), 'attack');
-      addPlayerRoundMessage([
+      addPlayerRoundMessage(userId, round, [
         'Your attack on',
         regionObj.name,
         'succeeded.'
         ].join(' '));
     } else {
-      addPlayerRoundMessage([
+      addPlayerRoundMessage(userId, round, [
         'Your attack on',
         regionObj.name,
         'failed.'

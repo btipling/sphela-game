@@ -261,7 +261,6 @@ Updates = new Meteor.Collection('updates');
 function addMessage(message, opt_type, opt_userId, opt_when) {
   var game, round, when;
   message = message.substr(0, MAX_MESSAGE_LENGTH);
-  console.log('addMessage:', message);
   game = Games.findOne();
   if (!game) {
     round = 0;
@@ -340,6 +339,7 @@ function addPlayerRoundMessage(userId, round, message, opt_type) {
     type: type,
     when: new Date().getTime()
   });
+  PlayerRounds.update({_id: playerRound._id}, playerRound, global.NOOP);
 }
 
 /**

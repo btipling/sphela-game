@@ -28,11 +28,13 @@
 </template>
 
 <template name="playerMessages">
-  <div class="player-messages-container span2">
+  <div class="player-messages-container span4">
     <h3>Your messages</h3>
     <div class="player-messages">
       {{#each messages}}
-      <div class="player-message">Foo</div>
+      <div class="player-message player-message-{{this.type}}">
+        {{this.message}}
+      </div>
       {{/each}}
     </div>
   </div>
