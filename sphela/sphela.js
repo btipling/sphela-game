@@ -273,8 +273,10 @@ if (Meteor.isClient) {
     function moveToCenter() {
       var coords;
       if (_.isEmpty(transitionCoordinates)) {
-        // Checking to make sure we actually made it. This is a noop of
-        // we are actually there.
+        /*
+         * Checking to make sure we actually made it. This is a noop if
+         * we are actually there.
+         */
         selectRegion(currentRegion);
         return;
       }
