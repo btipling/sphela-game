@@ -227,13 +227,13 @@ if (Meteor.isClient) {
       projection.translate([leftSet, topSet]);
       if (projectionBg) {
         projectionBg.attr('transform',
-            [
-              'translate(',
-              leftSet-SCALE,
-              ', ',
-              topSet-SCALE,
-              ')'
-            ].join(''));
+          [
+            'translate(',
+            leftSet-SCALE,
+            ', ',
+            topSet-SCALE,
+            ')'
+          ].join(''));
        }
     }
 
