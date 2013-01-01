@@ -7,7 +7,7 @@ var global = this;
  * @type {number}
  * @const
  */
-global.TICK_INTERVAL = 3000;
+global.TICK_INTERVAL = 30000;
 
 /**
  * @type {number}
@@ -15,6 +15,31 @@ global.TICK_INTERVAL = 3000;
  */
 //global.TICKS_IN_GAME = 720;
 global.TICKS_IN_GAME = 10;
+
+/**
+ * @type {Array.<string>}
+ * @const
+ */
+global.COLORS = [
+  '#ef8627',
+  '#ff983d',
+  '#f4a885',
+  '#ff8f65',
+  '#e7ac2e',
+  '#f54e36',
+  '#e28767',
+  '#f89685',
+  '#e2cc5f',
+  '#faca6f',
+  '#f7d454',
+  '#ff7a2f',
+  '#d0835c',
+  '#ffa586',
+  '#ff8e2c',
+  '#e2c073',
+  '#f7b52f',
+  '#ffdc6a'
+];
 
 if (Meteor.isClient) {
   Session.set(sessionKeys.CONNECTED, false);
@@ -35,31 +60,6 @@ if (Meteor.isClient) {
       SCALE,
       ORIGIN,
       PRECISION;
-
-    /**
-     * @type {Array.<string>}
-     * @const
-     */
-    COLORS = [
-      '#ef8627',
-      '#ff983d',
-      '#f4a885',
-      '#ff8f65',
-      '#e7ac2e',
-      '#f54e36',
-      '#e28767',
-      '#f89685',
-      '#e2cc5f',
-      '#faca6f',
-      '#f7d454',
-      '#ff7a2f',
-      '#d0835c',
-      '#ffa586',
-      '#ff8e2c',
-      '#e2c073',
-      '#f7b52f',
-      '#ffdc6a'
-    ];
 
     /**
      * @type {number}
@@ -210,7 +210,9 @@ if (Meteor.isClient) {
       svg.selectAll('path')
         .data(data.features)
         .enter().append('svg:path')
-        .style('fill', function(d, i) { return COLORS[i%COLORS.length] })
+        .style('fill', function(d, i) {
+            return global.COLORS[i%global.COLORS.length]
+          })
         .attr('id', function(d) { return d.id })
         .attr('d', clip);
       centerMap();
