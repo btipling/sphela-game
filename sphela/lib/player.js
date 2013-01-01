@@ -1,6 +1,17 @@
 (function() {
   if (Meteor.isClient) {
 
+    /**
+     * @param {Object} event
+     */
+    function joinRound(event) {
+      var userId;
+      userId = Meteor.userId();
+      if (userId) {
+        Meteor.call('joinRound', userId, global.NOOP);
+      }
+    }
+
     Template.territoryCount.count = function() {
       return playerRegions(Meteor.userId(), clientCurrentRoundNumber()).length;
     }
@@ -122,17 +133,6 @@
       return playerRound.color;
     };
 
-
-    /**
-     * @param {Object} event
-     */
-    function joinRound(event) {
-      var userId;
-      userId = Meteor.userId();
-      if (userId) {
-        Meteor.call('joinRound', userId, global.NOOP);
-      }
-    }
     Meteor.autosubscribe(function() {
       Meteor.subscribe('player', Meteor.userId());
     });
