@@ -4,9 +4,16 @@ var global,
   Regions,
   Players,
   PlayerRounds,
-  Updates;
+  Updates, 
+  MAX_MESSAGE_LENGTH;
 
 global = this;
+
+/**
+ * @type {number}
+ * @const
+ */
+MAX_MESSAGE_LENGTH = 256;
 
 /**
  * Games is collection with only one item, the game state.
@@ -95,6 +102,7 @@ function startRound() {
   saveGame(game);
   Rounds.insert({
     round: currentRound,
+    regions: {},
     numPlayers: [{count: 0, when: new Date().getTime()}]
   });
   addMessage('New round ' + currentRound + ' started!');
@@ -110,7 +118,7 @@ function currentRound() {
 
 function addPlayerToRound() {
   var round, rounds;
-  round = Rounds.findOne({round: currentRoundNumber()});
+  round = currentRound();
   round.numPlayers.push({
     count: _.last(round.numPlayers).count + 1,
     when: new Date().getTime()
@@ -118,39 +126,80 @@ function addPlayerToRound() {
   Rounds.update({_id: round._id}, round);
 }
 
+/**
+ * @param {number} round
+ * @param {string} region
+ */
+function getRegion(round, region) {
+  r = Rounds.findOne({round: round});
+  regions = r.regions;
+  if (!_.has(regions, region)) {
+    regions[region] = {
+      owner: [],
+      troopCount: []
+    };
+  }
+  return regions[region];
+}
+
 
 /**
- * Regions store information about existing region states.
- * @type {Meteor.Collection}
+ * @param {string} userId
+ * @param {number} round
+ * @param {string} region
  */
-Regions = new Meteor.Collection('regions');
-
-/**
- * @param {string} regionId
- * @param {string} user
- */
-function setRegionOwner(regionId, user) {
+function setRegionOwner(userId, round, region) {
+  var regionObj, previousOwner;
+  regionObj = getRegion(round, region);
+  previousOwner = _.last(regionObj.owner);
+  if (previousOwner) {
+    if (previousOwner.userId === userId) {
+      return;
+    }
+    removeFromPlayerRegions(previousOwner.userId, round, region);
+  }
+  addToPlayerRegions(userId, round, region);
+  regionObj.owner.push({
+    userId: userId,
+    when: new Date().getTime()
+  });
 }
 
 /**
- * @param {string} regionId
+ * @param {number} round
+ * @param {string} region
  * @param {number} troopCount
  */
-function setRegionTroopCount(regionId, troopCount) {
+function setRegionTroopCount(round, region, troopCount) {
+  var regionObj;
+  regionObj = getRegion(round, region)
+    regionObj.troopCount.push({
+      troopCount: troopCount,
+      when: new Date().getTime()
+    });
 }
 
 /**
- * @param {string} regionId
- * @return {string} user
+ * Get the userId for the owner of a region.
+ * @param {number} round
+ * @param {string} region
+ * @return {string?} The user id or null if none.
  */
-function regionOwner(regionId) {
+function regionOwner(round, region) {
+  var regionObj;
+  regionObj = getRegion(round, region);
+  return _.last(regionObj.owner) || null;
 }
 
 /**
- * @param {string} regionId
+ * @param {number} round
+ * @param {string} region
  * @return {number} number
  */
-function regionTroopCount(regionId) {
+function regionTroopCount(round, region) {
+  var regionObj;
+  regionObj = getRegion(round, region);
+  return _.last(regionObj.owner) || 0;
 }
 
 /**
@@ -195,7 +244,7 @@ Updates = new Meteor.Collection('updates');
  */
 function addMessage(message, opt_type, opt_when) {
   var game, round, when;
-  console.log('message', message);
+  message = message.substr(0, MAX_MESSAGE_LENGTH);
   game = Games.findOne();
   if (!game) {
     round = 0;
@@ -232,6 +281,7 @@ function addPlayerToPlayerRound(userId, round) {
       userId: userId,
       totalTroops: [initialCount],
       floatingTroops: [initialCount],
+      messages: [],
       regionCount: [{count: 0, time: new Date().getTime()}],
       regions: []
     };
@@ -243,9 +293,21 @@ function addPlayerToPlayerRound(userId, round) {
 /**
  * @param {string} userId
  * @param {number} round
- * @param {Array.<string>} regions
+ * @param {string} message
+ * @param {string=} opt_type
  */
-function setPlayerRegions(userId, round, regions) {
+function addPlayerRoundMessage(userId, round, message, opt_type) {
+  var type, playerRound;
+  playerRound = PlayerRounds.findOne({userId: userId, round: round});
+  if (!playerRound) {
+    return;
+  }
+  type = opt_type || 'info';
+  playerRound.messages.push({
+    message: message,
+    type: type,
+    when: new Date().getTime()
+  });
 }
 
 /**
@@ -262,15 +324,65 @@ function setPlayerTotalTroops(userId, round, troops) {
  * @param {number} troops
  */
 function setPlayerFloatingTroops(userId, round, troops) {
+  var playerRound;
+  playerRound = PlayerRounds.findOne({userId: userId, round: round});
+  if (!playerRound) {
+    return;
+  }
+  playerRound.floatingTroops.push({count: troops, time: new Date().getTime()});
+  PlayerRounds.update({_id: playerRound._id}, playerRound, global.NOOP);
 }
 
 /**
  * @param {string} userId
+ * @param {string} round
+ * @param {string} region
+ */
+function addToPlayerRegions(userId, round, region) {
+  var playerRound;
+  playerRound = PlayerRounds.findOne({userId: userId, round: round});
+  if (!playerRound) {
+    return;
+  }
+  playerRound.regions = _.uniq([region].concat(playerRound.regions));
+  playerRound.regionCount.push({
+    count: playerRound.regions.length,
+    when: new Date().getTime()
+  });
+  PlayerRounds.update({_id: playerRound._id}, playerRound, global.NOOP);
+};
+
+/**
+ * @param {string} userId
+ * @param {string} round
+ * @param {string} region
+ */
+function removeFromPlayerRegions(userId, round, region) {
+  var playerRound;
+  playerRound = PlayerRounds.findOne({userId: userId, round: round});
+  if (!playerRound) {
+    return;
+  }
+  playerRound.regions = _.without(playerRound.regions, [region]);
+  playerRound.regionCount.push({
+    count: playerRound.regions.length,
+    when: new Date().getTime()
+  });
+  PlayerRounds.update({_id: playerRound._id}, playerRound, global.NOOP);
+};
+
+/**
+ * @param {string} userId
  * @param {number} round
- * @return {Array.<string> regions
+ * @return {Array.<string>} regions
  */
 function playerRegions(userId, round) {
-  return 0;
+  var playerRound;
+  playerRound = PlayerRounds.findOne({userId: userId, round: round});
+  if (!playerRound) {
+    return [];
+  }
+  return playerRound.regions;
 }
 
 /**

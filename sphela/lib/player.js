@@ -2,7 +2,7 @@
   if (Meteor.isClient) {
 
     Template.territoryCount.count = function() {
-      return playerRegions(Meteor.userId(), clientCurrentRoundNumber());
+      return playerRegions(Meteor.userId(), clientCurrentRoundNumber()).length;
     }
 
     /**
@@ -35,6 +35,31 @@
       }
       return _.indexOf(player.rounds, game.currentRound) !== -1;
     };
+
+    /**
+     * @return {boolean}
+     */
+    Template.playerStatus.hasTerritory = function() {
+      var playerRound, userId, game, regions;
+      userId = Meteor.userId();
+      if (!userId) {
+        return false;
+      }
+      game = Games.findOne();
+      if (!game) {
+        return false;
+      }
+      playerRound = PlayerRounds.findOne({userId: userId, round: game.currentRound});
+      if (!playerRound) {
+        return false;
+      }
+      regions = _.last(playerRound.regions);
+      if (!regions) {
+        return false;
+      }
+      return !!regions.length;
+    };
+
 
     /**
      * @return {number}

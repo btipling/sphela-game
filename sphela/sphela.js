@@ -7,7 +7,7 @@ var global = this;
  * @type {number}
  * @const
  */
-global.TICK_INTERVAL = 100000;
+global.TICK_INTERVAL = 30000;
 
 /**
  * @type {number}
@@ -408,6 +408,7 @@ if (Meteor.isClient) {
       var message, userId, input;
       input = $('.chat-update');
       message = $.trim(input.val());
+      message = message.substr(0, MAX_MESSAGE_LENGTH);
       input.val('');
       userId = Meteor.userId();
       if (userId) {

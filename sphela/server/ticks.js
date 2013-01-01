@@ -30,7 +30,9 @@ var global = this;
 
   if (Meteor.isServer) {
     Meteor.startup(function() {
-      startRound();
+      if (currentRoundNumber() === 0) {
+        startRound();
+      }
       Meteor.setInterval(runTick, global.TICK_INTERVAL);
     });
   }

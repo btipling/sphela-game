@@ -21,6 +21,9 @@
      */
     joinRound: function(userId) {
       var player, playerRound, round, username;
+      if (userId !== Meteor.userId()) {
+        return;
+      }
       round = currentRoundNumber();
       player = Players.findOne({userId: userId});
       username = getUsername(userId);
@@ -46,6 +49,9 @@
      */
     say: function(userId, message) {
       var username;
+      if (userId !== Meteor.userId()) {
+        return;
+      }
       username = getUsername(userId);
       if (!username || message.length === 0) {
         return;
@@ -63,13 +69,15 @@
      */
     dropAttack: function(userId, region) {
       var username, regionObj, regionName;
+      if (userId !== Meteor.userId()) {
+        return;
+      }
+      if (!_.has(regionStore, region)) {
+        return;
+      }
       username = getUsername(userId);
       regionName = regionStore[region].name;
-      addMessage([
-          username,
-          'has dropped on',
-          regionName + '.'
-      ].join(' '), 'attack');
+      combat.dropAttack(userId, region);
     }
   });
 })();
