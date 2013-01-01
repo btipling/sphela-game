@@ -315,7 +315,7 @@ if (Meteor.isClient) {
       target = getTarget(region.id);
       d3.selectAll('.clicked').classed('clicked', false);
       d3.select(target).classed('clicked', true);
-      // Putting on top of stack.
+      // Putting path on top of DOM stack.
       parent = target.parentNode;
       parent.removeChild(target);
       parent.appendChild(target);
