@@ -1,7 +1,8 @@
-var combat = {};
+var combat, global;
+global = this;
+combat = {};
 (function () {
-  var MAX_DROP_TROOPS, 
-    EMPTY_REGION_TROOPS,
+  var MAX_DROP_TROOPS,
     MIN_COMBAT_DAMAGE,
     MAX_COMBAT_DAMAGE;
   /**
@@ -10,12 +11,6 @@ var combat = {};
    * @const
    */
   MAX_DROP_TROOPS = 5;
-  /**
-   * The troop count in an empty region.
-   * @type {number}
-   * @const
-   */
-  EMPTY_REGION_TROOPS = 3;
   /**
    * The minimum damage one troop can do.
    * @type {number}
@@ -34,7 +29,7 @@ var combat = {};
    * @param {string} region
    */
   function dropAttack(userId, region) {
-    var attackTroops, round, regionObj, user, username;
+    var attackTroops, round, regionObj, user, username, playerRound;
     user = Meteor.users.findOne({_id: userId});
     if (!user) {
       return;
@@ -42,6 +37,10 @@ var combat = {};
     username = user.profile.name;
     regionObj = regionStore[region];
     round = currentRoundNumber();
+    playerRound = PlayerRounds.findOne({userId: userId, round:round});
+    if (!playerRound || _.last(playerRound.regionCount).count !== 0) {
+      return;
+    }
     attackTroops = playerFloatingTroops(userId, round);
     if (!attackTroops) {
       addPlayerRoundMessage(userId, round, [
@@ -107,7 +106,7 @@ var combat = {};
     if (!attackPlayerRound) {
       return false;
     }
-    outcome = combat_(attackTroops, EMPTY_REGION_TROOPS);
+    outcome = combat_(attackTroops, global.EMPTY_REGION_TROOPS);
     if (outcome.attackerWin) {
       setRegionOwner(userId, round, region);
       setRegionTroopCount(round, region, outcome.troopsLeft);

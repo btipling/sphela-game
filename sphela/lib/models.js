@@ -103,8 +103,8 @@ function startRound() {
   Rounds.insert({
     round: currentRound,
     regions: {},
-    players: [], //A list of userIds.
-    playerInfo: {}, //A map of userId to game info.
+    players: [], // A list of userIds.
+    playerInfo: {}, // A map of userId to game info.
     numPlayers: [{count: 0, when: new Date().getTime()}]
   });
   addMessage('New round ' + currentRound + ' started!');
@@ -164,7 +164,7 @@ function getRegion(round, region) {
  * @param {string} region
  */
 function setRegionOwner(userId, round, region) {
-  var regionObj, previousOwner;
+  var regionObj, previousOwner, roundObj;
   regionObj = getRegion(round, region);
   previousOwner = _.last(regionObj.owner);
   if (previousOwner) {
@@ -178,6 +178,9 @@ function setRegionOwner(userId, round, region) {
     userId: userId,
     when: new Date().getTime()
   });
+  roundObj = currentRound();
+  roundObj.regions[region] = regionObj;
+  Rounds.update({_id: roundObj._id}, roundObj, global.NOOP);
 }
 
 /**
@@ -187,11 +190,14 @@ function setRegionOwner(userId, round, region) {
  */
 function setRegionTroopCount(round, region, troopCount) {
   var regionObj;
-  regionObj = getRegion(round, region)
-    regionObj.troopCount.push({
-      troopCount: troopCount,
-      when: new Date().getTime()
-    });
+  regionObj = getRegion(round, region);
+  regionObj.troopCount.push({
+    count: troopCount,
+    when: new Date().getTime()
+  });
+  roundObj = currentRound();
+  roundObj.regions[region] = regionObj;
+  Rounds.update({_id: roundObj._id}, roundObj, global.NOOP);
 }
 
 /**
@@ -214,7 +220,7 @@ function regionOwner(round, region) {
 function regionTroopCount(round, region) {
   var regionObj;
   regionObj = getRegion(round, region);
-  return _.last(regionObj.owner) || 0;
+  return _.last(regionObj.troopCount).count || 0;
 }
 
 /**

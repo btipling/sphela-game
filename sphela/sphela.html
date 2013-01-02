@@ -29,8 +29,15 @@
 </body>
 
 <template name="region">
-  <div class="region-name label label-inverse">
+  <div class="region-info label label-inverse">
+    <div class="region-name">
     {{regionName}}
+    </div>
+    <div>
+      Ruler: {{owner}}
+      <span class="player-color" style="background-color:{{color}};"></span>
+    </div>
+    <div>Troops: {{troops}}</div>
   </div>
 </template>
 

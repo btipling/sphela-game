@@ -7,7 +7,7 @@ var global = this;
  * @type {number}
  * @const
  */
-global.TICK_INTERVAL = 30000;
+global.TICK_INTERVAL = 15000;
 
 /**
  * @type {number}
@@ -15,6 +15,13 @@ global.TICK_INTERVAL = 30000;
  */
 //global.TICKS_IN_GAME = 720;
 global.TICKS_IN_GAME = 10;
+
+/**
+ * The troop count in an empty region.
+ * @type {number}
+ * @const
+ */
+global.EMPTY_REGION_TROOPS = 3;
 
 /**
  * @type {Array.<string>}
@@ -434,10 +441,57 @@ if (Meteor.isClient) {
       'submit .update-chatbox': handleSubmitChat
     });
 
+    /**
+     * The name of the selected region.
+     * @return {string}
+     */
     Template.region.regionName = function() {
       var region;
       region = Session.get(sessionKeys.SELECTED_REGION);
       return region ? region.properties.name : 'Select a region.';
+    };
+
+    /**
+     * The ruler of the selected region.
+     * @return {string}
+     */
+    Template.region.owner = function() {
+      var round, region, userId;
+      region = Session.get(sessionKeys.SELECTED_REGION);
+      round = Rounds.findOne({round: clientCurrentRoundNumber()});
+      if (!round) {
+        return 'None';
+      }
+      if (!_.has(round.regions, region.id)) {
+        return 'None';
+      }
+      userId = _.last(round.regions[region.id].owner).userId;
+      if (!userId) {
+        return 'None';
+      }
+      return round.playerInfo[userId].name;
+    };
+
+    /**
+     * The number of troops on the selected region.
+     * @return {string}
+     */
+    Template.region.troops = function() {
+      var round, region, troopCount;
+      region = Session.get(sessionKeys.SELECTED_REGION);
+      round = Rounds.findOne({round: clientCurrentRoundNumber()});
+      if (!round) {
+        return global.EMPTY_REGION_TROOPS.toString();
+      }
+      if (!_.has(round.regions, region.id)) {
+        return global.EMPTY_REGION_TROOPS.toString();
+      }
+      troopCount = round.regions[region.id].troopCount;
+      if (_.isEmpty(troopCount)) {
+        return global.EMPTY_REGION_TROOPS.toString();
+      } else {
+        return _.last(troopCount).count.toString();
+      }
     };
 
     Template.leftOver.leftOverRegions = function(regions) {
