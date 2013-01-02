@@ -1,5 +1,7 @@
 @black: #333;
+@obsidian: rgba(33, 33, 33, .5);
 @white: #FFF;
+@ivory: rgba(255, 255, 255, .75);
 @blue: #5AC9FF;
 @lightBlue: #B9D2DE;
 @red: #F54E36;
@@ -176,10 +178,11 @@ path.clicked {
 }
 .player-status {
   position: absolute;
-  bottom: 50px;
+  top: 0px;
   left: -15px;
   margin: 20px 0;
   max-width: 300px;
+  overflow: hidden;
 }
 .player-messages {
   margin-bottom: 25px;
@@ -202,5 +205,13 @@ path.clicked {
 .player-count {
   .count {
     font-size: 300%;
+  }
+  display: inline-block;
+}
+.attack-form {
+  margin-left: 5px;
+  color: @white;
+  form.well {
+    background-color: transparent;
   }
 }

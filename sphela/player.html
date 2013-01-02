@@ -1,15 +1,14 @@
 <template name="playerStatus">
 <div class="row player-status">
   {{#if isPlaying}}
+    {{> playerColor}}
+    {{> playerCounts}}
     {{#if hasTerritory}}
       {{> territoryWarScreen}}
     {{else}}
       {{> dropWarScreen}}
     {{/if}}
-    {{> playerColor}}
     {{> playerMessages}}
-    {{> territoryCount}}
-    {{> floatingTroopCount}}
   {{else}}
   <div class="span2">
     <button class="btn join-round">Join Round {{round}}</button>
@@ -19,10 +18,12 @@
 </template>
 
 <template name="playerColor">
-  <div class="span2">
-    <div class="player-color-container">
-      Your color:
-      <span class="player-color" style="background-color:{{color}}"></span>
+    <div class="container">
+    <div class="span2">
+      <div class="player-color-container">
+        Your color:
+        <span class="player-color" style="background-color:{{color}}"></span>
+      </div>
     </div>
   </div>
 </template>
@@ -41,9 +42,60 @@
 </template>
 
 <template name="territoryWarScreen">
-  <div class="span4">
-    Territory War Screen.
+  <div class="container">
+    {{> attackForm}}
+  </didv>
+</template>
+
+<template name="sourceSelection">
+  <div class="source-selector-container war-selector">
+    <select class="source-selector">
+      {{#each sources}}
+      <option value="{{this.id}}"
+      {{#if this.selected}}selected="selected"{{/if}}
+      >{{this.name}}</option>
+      {{/each}}
+    </select>
   </div>
+</template>
+
+<template name="targetSelection">
+  <div class="target-selector-container war-selector">
+    <select class="target-selector"
+      {{#unless canSelect }}disabled="disabled"{{/unless}}>
+      {{#each targets}}
+        <option value="{{this.id}}">{{this.name}}</option>
+      {{/each}}
+    </select>
+  </div>
+</template>
+
+<template name="attackForm">
+<div class="row attack-form">
+  <form class="form span3">
+    <h3>Attack a region</h3>
+    <div>
+      <label>Source: {{source}}</label>
+      {{> sourceSelection}}
+    </div>
+    <div>
+      <label>Destination: {{destination}}</label>
+      {{> targetSelection}}
+    </div>
+    <div>
+    <label>Number of troops:
+      <br/>
+      <input type="attack-num-input" value="{{troops}}" />
+    </label>
+    </div>
+    <div>
+      <input type="range" class="attack-num-range"/>
+    </div>
+    <div>
+      <input type="submit" class="btn" value="Attack!"/>
+    </div>
+  </form>
+</div>
 </template>
 
 <template name="dropWarScreen">
@@ -64,20 +116,19 @@
   </div>
 </template>
 
-<template name="territoryCount">
-<div class="player-count span2">
-  <p>Your territories:</p>
-  <div class="count">
-    {{count}}
+<template name="playerCounts">
+  <div class="container">
+    <div class="player-count span1">
+      <p>Your territories:</p>
+      <div class="count">
+        {{regions}}
+      </div>
+    </div>
+    <div class="player-count span1">
+      <p>Troops to place:</p>
+      <div class="count">
+        {{floatingTroops}}
+      </div>
+    </div>
   </div>
-</div>
-</template>
-
-<template name="floatingTroopCount">
-<div class="player-count span2">
-  <p>Troops to place:</p>
-  <div class="count">
-    {{count}}
-  </div>
-</div>
 </template>
