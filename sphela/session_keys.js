@@ -28,6 +28,14 @@ var sessionKeys = (function() {
      * Key for current round.
      * @type {string}
      */
-     CURRENT_ROUND: 'currentRound'
+    CURRENT_ROUND: 'currentRound',
+    /**
+     * Key for selected target.
+     */
+    SELECTED_TARGET: 'selectedTarget',
+    /**
+     * Key for region for which info is requested.
+     */
+    REQUESTED_REGION: 'requestedRegion'
   };
 })();

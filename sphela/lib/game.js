@@ -1,6 +1,7 @@
 /**
  * @fileOverview Runs the game information UI.
  */
+var global = this;
 (function() {
   if (Meteor.isClient) {
     var nextTick;
@@ -60,10 +61,11 @@
       }
       _.each(round.playerInfo, function(player) {
         _.each(player.regions, function(region) {
-          $('#' + region).css('fill', player.color);
+          d3.select('#' + region).style('fill', player.color, 'important');
         });
       });
     }
+    global.updateRegionColors = updateRegionColors;
     Meteor.subscribe('tick');
     Meteor.subscribe('round');
   }

@@ -75,19 +75,21 @@
   </div>
   <div id="main" class="container">
     {{> region}}
-    <svg id="map">
-    <defs>
-      <radialGradient id="ocean" cx="50%" cy="50%" r="50%" fx="30%" fy="20%">
-        <stop offset="0%" style="stop-color:#FFF;
-        stop-opacity:1" />
-        <stop offset="100%" style="stop-color:#5AC9FF;stop-opacity:1" />
-      </radialGradient>
-      <filter id="atmosphere" x="-0.5" y="-0.5" width="200%" height="200%">
-        <feGaussianBlur result="blurOut" in="SourceGraphic" stdDeviation="30" />
-        <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
-      </filter>
-    </defs>
-    </svg>
+    {{#constant}}
+      <svg id="map">
+      <defs>
+        <radialGradient id="ocean" cx="50%" cy="50%" r="50%" fx="30%" fy="20%">
+          <stop offset="0%" style="stop-color:#FFF;
+          stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#5AC9FF;stop-opacity:1" />
+        </radialGradient>
+        <filter id="atmosphere" x="-0.5" y="-0.5" width="200%" height="200%">
+          <feGaussianBlur result="blurOut" in="SourceGraphic" stdDeviation="30" />
+          <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
+        </filter>
+      </defs>
+      </svg>
+    {{/constant}}
   </div>
   {{!Uncomment to add config maker.}}
   {{!> configmaker}}

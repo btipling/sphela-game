@@ -1,14 +1,21 @@
 (function() {
   if (Meteor.isClient) {
+    var currentRoundSub;
 
     /**
      * @param {Object} event
      */
     function joinRound(event) {
       var userId;
+      console.log('joining');
       userId = Meteor.userId();
+      console.log('joining', userId);
       if (userId) {
-        Meteor.call('joinRound', userId, global.NOOP);
+        console.log('calling join round!');
+        Meteor.call('joinRound', global.NOOP);
+        _.defer(function() {
+          Meteor.subscribe('join');
+        });
       }
     }
 
@@ -35,16 +42,20 @@
      */
     Template.playerStatus.isPlaying = function() {
       var game, player, userId;
+      console.log('is playering?');
       game = Games.findOne();
       userId = Meteor.userId();
       if (!game || !userId) {
+        console.log('no game, no userid', game, userId);
         return false;
       }
       player = Players.findOne({userId: userId});
       if (!player) {
+        console.log('no player', player);
         return false;
       }
-      return _.indexOf(player.rounds, game.currentRound) !== -1;
+      console.log('player.currentRound', player.currentRound, 'game.currentRound', game.currentRound);
+      return player.currentRound === game.currentRound;
     };
 
     /**
@@ -85,6 +96,7 @@
     Template.playerStatus.round = function() {
       var round;
       round = Rounds.findOne({round: clientCurrentRoundNumber()});
+      console.log('template rounds', round, clientCurrentRoundNumber());
       return round ? round.round : 0;
     }
     Template.playerStatus.events({
@@ -113,7 +125,7 @@
       region = Session.get('selectedRegion');
       userId = Meteor.userId();
       if (userId && region) {
-        Meteor.call('dropAttack', userId, region.id, global.NOOP);
+        Meteor.call('dropAttack', region.id, global.NOOP);
       }
     }
 
@@ -178,13 +190,15 @@
       }
       return _.last(troopCount).count > 0;
     }
-    Template.targetSelection.canSelect = canSelect;
+    Template.targetSelection.canSelect = function () {
+      return canSelect();
+    };
 
     /**
      * @return {Array.<Object>}
      */
     Template.targetSelection.targets = function() {
-      var source, vectors, playerRound, i;
+      var source, vectors, playerRound, selected;
       source = Session.get('selectedRegion');
       if (!source) {
         return [];
@@ -196,16 +210,17 @@
       vectors = _.filter(regionStore[source.id].vectors, function(region) {
         return _.indexOf(playerRound.regions, region) === -1;
       });
-      i = 0;
+      if (_.isEmpty(vectors)) {
+        return [];
+      }
+      selected = Session.get('selectedTarget') || _.first(vectors);
+      setSelectedTarget(selected);
       return _.map(vectors, function(vector) {
-        var obj;
-        obj = {
-          selected: i < 1,
+        return {
+          selected: vector === selected,
           id: vector,
           name: regionStore[vector].name
         };
-        i += 1;
-        return obj;
       });
     };
 
@@ -234,15 +249,54 @@
       });
     }
 
+    Template.targetSelection.events({
+      'change .target-selector': handleTargetSelection
+    });
+
+    /**
+     * @param {Object} event
+     */
+    function handleTargetSelection(event) {
+      setSelectedTarget($(event.target).val());
+    }
+
+    /**
+     * @param {string} region
+     */
+    function setSelectedTarget(region) {
+      Session.set('selectedTarget', region);
+      d3.select('.targeted').classed('targeted', false);
+      d3.select('#' + region).classed('targeted', true);
+    }
+    Meteor.autorun(function() {
+      console.log('Players updated!', Players.find());
+    });
+
     Meteor.autosubscribe(function() {
-      Meteor.subscribe('player', Meteor.userId());
+      var game;
+      game = Games.findOne();
+      if (!game) {
+        console.log('no fucking game');
+        return;
+      }
+      console.log('autosubbing');
+      if (currentRoundSub === game.currentRound) {
+        console.log('already subbed wtf');
+        return;
+      }
+      console.log('autosubscribe player', Meteor.userId(), game.currentRound);
+      console.log('subscribing to this shiznits', Meteor.userId(), game.currentRound);
+      currentRoundSub = game.currentRound;
+      if (game) {
+        Meteor.subscribe('player-game', game.currentRound);
+      }
     });
     Meteor.autosubscribe(function() {
       if (typeof clearClientRound !== 'undefined') {
         clearClientRound();
       }
-      Meteor.subscribe('player-round-updates', Meteor.userId(),
-        Session.get('currentRound'));
+      console.log('round updates', Session.get('currentRound'));
+      Meteor.subscribe('player-round-updates', Session.get('currentRound'));
     });
   }
 })();

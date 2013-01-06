@@ -47,7 +47,7 @@ function getGame() {
   var game;
   game = Games.findOne();
   if (!game) {
-    game = {currentRound: 1, tick: 0};
+    game = {currentRound: 0, tick: 0};
     game._id = Games.insert(game);
   }
   return game;
@@ -97,17 +97,22 @@ function startRound() {
     currentRound = 0;
   }
   currentRound++;
-  game.currentRound = currentRound;
-  game.tick = 0;
-  saveGame(game);
-  Rounds.insert({
-    round: currentRound,
-    regions: {},
-    players: [], // A list of userIds.
-    playerInfo: {}, // A map of userId to game info.
-    numPlayers: [{count: 0, when: new Date().getTime()}]
-  });
-  addMessage('New round ' + currentRound + ' started!');
+  round = Rounds.findOne({round: round});
+  if (!round) {
+    console.log('inserting a fucking round');
+    game.currentRound = currentRound;
+    game.tick = 0;
+    saveGame(game);
+    Rounds.insert({
+      round: currentRound,
+      regions: {},
+      playerInfo: {}, // A map of userId to game info.
+      numPlayers: [{count: 0, when: new Date().getTime()}]
+    });
+    addMessage('New round ' + currentRound + ' started!');
+  } else {
+    console.log('Something went wrong, round recreated.');
+  }
 }
 
 /**
@@ -243,7 +248,8 @@ function player(userId) {
     player = {
       signedUp: new Date().getTime(),
       userId: userId,
-      rounds: []
+      rounds: [],
+      currentRound: 0
     };
     player._id = Players.insert(player);
   }

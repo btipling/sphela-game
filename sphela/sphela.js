@@ -7,7 +7,7 @@ var global = this;
  * @type {number}
  * @const
  */
-global.TICK_INTERVAL = 30000;
+global.TICK_INTERVAL = 1000;
 
 /**
  * @type {number}
@@ -147,6 +147,10 @@ if (Meteor.isClient) {
     $(window).on('popstate', function() {
       var id, data;
       id = window.location.pathname.substr(1);
+      if (!dataStore) {
+        console.log('No dataStore, popState');
+        return;
+      }
       data = _.where(dataStore.features, {id: id});
       waitForId(data);
     });
@@ -192,6 +196,10 @@ if (Meteor.isClient) {
     arc =  d3.geo.greatArc().precision(PRECISION);
 
     function findLeftOver() {
+      if (!dataStore) {
+        console.log('No datastore, findLeftOver');
+        return;
+      }
       Session.set(sessionKeys.ALL_REGIONS, _.map(dataStore.features,
         function(item) {
         return {
@@ -224,6 +232,11 @@ if (Meteor.isClient) {
         .attr('d', clip);
       centerMap();
       feature = d3.selectAll('path');
+      _.defer(function() {
+        if (_.isFunction(global.updateRegionColors)) {
+          global.updateRegionColors();
+        }
+      });
     }
 
     function centerMap() {
@@ -306,10 +319,28 @@ if (Meteor.isClient) {
     function handlePath(event) {
       var id, data, name;
       id = event.target.id;
+      if (!dataStore) {
+        console.log('No datastore, handlePath');
+        return;
+      }
       data = _.where(dataStore.features, {id: id});
       name = _.first(data).properties.name;
       history.pushState({data: data}, name, id);
       selectRegion(data);
+    }
+
+    /**
+     * @param {Object} event
+     */
+    function handleOverPath(event) {
+      var id, data;
+      id = event.target.id;
+      if (!dataStore) {
+        console.log('No dataStore handleOverPath');
+        return;
+      }
+      data = _.where(dataStore.features, {id: id});
+      Session.set('requestedRegion', _.first(data));
     }
 
     /**
@@ -324,24 +355,39 @@ if (Meteor.isClient) {
       target = getTarget(region.id);
       d3.selectAll('.clicked').classed('clicked', false);
       d3.select(target).classed('clicked', true);
-      // Putting path on top of DOM stack.
-      parent = target.parentNode;
-      parent.removeChild(target);
-      parent.appendChild(target);
-      Session.set(sessionKeys.SELECTED_REGION, region);
+      Session.set('selectedRegion', region);
+      Session.set('requestedRegion', region);
       highlightVectors(region.id);
+      toTop(region.id);
       pixel = path.centroid(region.geometry);
       coords = projection.invert(pixel);
       reCenterMap(coords);
     }
 
     /**
-     * @param {string} regionId
+     * Put all the vectors and region on top of the dom stack so their strokes
+     * show clearly.
+     * @param {string} region
      */
-    function highlightVectors(regionId) {
+    function toTop(region) {
+      var target;
+      target = getTarget(region);
+      if (target) {
+        parent = target.parentNode;
+        parent.removeChild(target);
+        parent.appendChild(target);
+      }
+    }
+
+    /**
+     * @param {string} region
+     */
+    function highlightVectors(region) {
       var vectors;
+      Session.set('selectedTarget', null);
       d3.selectAll('.vector').classed('vector', false);
-      vectors = getVectors(regionId);
+      d3.selectAll('.targeted').classed('targeted', false);
+      vectors = getVectors(region);
       _.each(vectors, function(id) {
         d3.select('#' + id).classed('vector', true);
       });
@@ -406,6 +452,10 @@ if (Meteor.isClient) {
       var id, name;
       event.preventDefault();
       id = d3.select(event.target).attr('data-id');
+      if (!dataStore) {
+        console.log('No datastore handleRegionClick');
+        return;
+      }
       data = _.where(dataStore.features, {id: id});
       name = _.first(data).properties.name;
       d3.selectAll('.clicked').classed('clicked', false);
@@ -426,12 +476,13 @@ if (Meteor.isClient) {
       input.val('');
       userId = Meteor.userId();
       if (userId) {
-        Meteor.call('say', userId, message, global.NOOP);
+        Meteor.call('say', message, global.NOOP);
       }
     }
 
     Template.app.events({
       'click path': handlePath,
+      'mouseenter path': handleOverPath,
       'click .zoom-in': handleZoomIn,
       'click .zoom-out': handleZoomOut,
       'click .left-over-region': handleRegionClick,
@@ -447,7 +498,7 @@ if (Meteor.isClient) {
      */
     Template.region.regionName = function() {
       var region;
-      region = Session.get(sessionKeys.SELECTED_REGION);
+      region = Session.get('requestedRegion');
       return region ? region.properties.name : 'Select a region.';
     };
 
@@ -457,9 +508,9 @@ if (Meteor.isClient) {
      */
     Template.region.owner = function() {
       var round, region, userId;
-      region = Session.get(sessionKeys.SELECTED_REGION);
+      region = Session.get('requestedRegion');
       round = Rounds.findOne({round: clientCurrentRoundNumber()});
-      if (!round) {
+      if (!round || !region) {
         return 'None';
       }
       if (!_.has(round.regions, region.id)) {
@@ -478,9 +529,9 @@ if (Meteor.isClient) {
      */
     Template.region.troops = function() {
       var round, region, troopCount;
-      region = Session.get(sessionKeys.SELECTED_REGION);
+      region = Session.get('requestedRegion');
       round = Rounds.findOne({round: clientCurrentRoundNumber()});
-      if (!round) {
+      if (!round || !region) {
         return global.EMPTY_REGION_TROOPS.toString();
       }
       if (!_.has(round.regions, region.id)) {
@@ -507,7 +558,7 @@ if (Meteor.isClient) {
         Session.set(sessionKeys.CONNECTED, true);
       });
     }
-    Meteor.subscribe('connect', Meteor.userId(), function () {
+    Meteor.subscribe('connect', function () {
       main();
     });
   });

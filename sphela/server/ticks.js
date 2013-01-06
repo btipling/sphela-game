@@ -29,8 +29,14 @@ var global = this;
 
   if (Meteor.isServer) {
     Meteor.startup(function() {
-      if (currentRoundNumber() === 0) {
+      var r, g;
+      r = currentRoundNumber();
+      if (!r || r === 0) {
         startRound();
+      }
+      g = getGame();
+      if (g) {
+        currentTick = g.tick;
       }
       Meteor.setInterval(runTick, global.TICK_INTERVAL);
     });

@@ -17,22 +17,27 @@
   Meteor.methods({
     /**
      * When a user joins the round the client calls this method.
-     * @param {string} userId The user's id.
      */
-    joinRound: function(userId) {
-      var player, playerRound, round, username;
-      if (userId !== Meteor.userId()) {
+    joinRound: function() {
+      var player, playerRound, round, username, userId;
+      console.log('joining');
+      if (_.isNull(this.userId)) {
         return;
       }
+      userId = this.userId;
+      console.log('joining', userId);
       round = currentRoundNumber();
       player = Players.findOne({userId: userId});
       username = getUsername(userId);
-      if (!username) {
+      if (!username || !player) {
+        console.log('no player or username', username, player);
         return;
       }
       if (_.indexOf(player.rounds, round) === -1) {
+        console.log('updating player round', player, round);
         player.rounds.push(round);
-        Players.update({userId: userId}, player, global.NOOP);
+        player.currentRound = round;
+        Players.update({userId: userId}, player);
         playerRound = addPlayerToPlayerRound(userId, round);
         addPlayerToRound(userId, username, playerRound.color);
         addMessage([
@@ -40,18 +45,21 @@
           'has joined round',
           round + '.',
         ].join(' '), 'join', userId);
+      } else {
+        console.log('not updating player round', player, round);
       }
+      console.log('join done', Players.findOne());
     },
     /**
      * User adds a chat message to updates.
-     * @param {string} userId
      * @param {string} message
      */
-    say: function(userId, message) {
-      var username;
-      if (userId !== Meteor.userId()) {
+    say: function(message) {
+      var username, userId;
+      if (_.isNull(this.userId)) {
         return;
       }
+      userId = this.userId;
       username = getUsername(userId);
       if (!username || message.length === 0) {
         return;
@@ -64,14 +72,14 @@
     },
     /**
      * Drop attack on a region.
-     * @param {string} userId
      * @param {string} region
      */
-    dropAttack: function(userId, region) {
-      var username, regionObj, regionName;
-      if (userId !== Meteor.userId()) {
+    dropAttack: function(region) {
+      var username, regionObj, regionName, userId;
+      if (_.isNull(this.userId)) {
         return;
       }
+      userId = this.userId;
       if (!_.has(regionStore, region)) {
         return;
       }

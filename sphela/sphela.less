@@ -4,7 +4,7 @@
 @ivory: rgba(255, 255, 255, .75);
 @blue: #5AC9FF;
 @lightBlue: #B9D2DE;
-@red: #F54E36;
+@red: #ff0018;
 @green: #0F0;
 @pastelGreen: #D0E1BB;
 @lightGreen: #F8F3DB;
@@ -13,6 +13,7 @@
 @lightOrange: #FFE5D0;
 @gray: #9C9C9C;
 @lightGray: #CCC;
+@darkGray: #3C3C3C;
 @bg: url(/images/stars.jpg);
 .inner-glow(@blur, @spread, @color) {
   -webkit-box-shadow: inset 0px 0px @blur @spread @color;
@@ -31,6 +32,8 @@ body {
   background-size: cover;
   color: @white;
   height: 100%;
+  min-width: 1140px;
+  overflow: auto;
   .inner-glow(15px, 0px, @lightBlue);
   border-radius: 8px;
   padding: 0px;
@@ -79,7 +82,12 @@ path {
 }
 
 path.vector {
-  fill: @pastelGreen !important;
+  &:hover {
+    fill: @pastelGreen !important;
+  }
+}
+path.targeted {
+  fill: @red !important;
 }
 
 path:hover {
@@ -87,8 +95,8 @@ path:hover {
   cursor: pointer;
 }
 path.clicked {
-  fill: @lightGreen !important;
   stroke: @black !important;
+  fill: @lightOrange !important;
 }
 
 .region-info {
@@ -143,7 +151,7 @@ path.clicked {
   position: absolute;
   width: 400px;
   right: 15px;
-  bottom: 80px;
+  bottom: 90px;
   text-align: right;
 }
 .update-chatbox {
@@ -158,7 +166,7 @@ path.clicked {
   }
 }
 .updates-container {
-  height: 200px;
+  height: 150px;
   overflow-x: hidden;
   overfloy-y: auto;
 }
@@ -173,16 +181,24 @@ path.clicked {
   color: @red;
 }
 .game-info {
-  text-align: right;
+  position: absolute;
+  right: 10px;
+  top: 75px;
   margin-right: 10px;
+  width: 400px;
+  text-align: right;
 }
 .player-status {
   position: absolute;
   top: 0px;
   left: -15px;
   margin: 20px 0;
-  max-width: 300px;
+  max-width: 400px;
   overflow: hidden;
+}
+.player-counts {
+  line-height: 150%;
+  margin: 10px 0;
 }
 .player-messages {
   margin-bottom: 25px;

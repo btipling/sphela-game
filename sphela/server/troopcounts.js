@@ -85,6 +85,9 @@ global = this;
     var playerRounds, round;
     console.log('updating troop counts!');
     round = currentRound();
+    if (!round) {
+      return;
+    }
     playerRounds = PlayerRounds.find({round:round.round});
     playerRounds.forEach(_.bind(updatePlayerTroops, null, round));
     Rounds.update({_id: round._id}, round, global.NOOP);
