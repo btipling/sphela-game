@@ -1,21 +1,14 @@
 (function() {
   if (Meteor.isClient) {
-    var currentRoundSub;
 
     /**
      * @param {Object} event
      */
     function joinRound(event) {
       var userId;
-      console.log('joining');
       userId = Meteor.userId();
-      console.log('joining', userId);
       if (userId) {
-        console.log('calling join round!');
         Meteor.call('joinRound', global.NOOP);
-        _.defer(function() {
-          Meteor.subscribe('join');
-        });
       }
     }
 
@@ -42,19 +35,15 @@
      */
     Template.playerStatus.isPlaying = function() {
       var game, player, userId;
-      console.log('is playering?');
       game = Games.findOne();
       userId = Meteor.userId();
       if (!game || !userId) {
-        console.log('no game, no userid', game, userId);
         return false;
       }
       player = Players.findOne({userId: userId});
       if (!player) {
-        console.log('no player', player);
         return false;
       }
-      console.log('player.currentRound', player.currentRound, 'game.currentRound', game.currentRound);
       return player.currentRound === game.currentRound;
     };
 
@@ -96,7 +85,6 @@
     Template.playerStatus.round = function() {
       var round;
       round = Rounds.findOne({round: clientCurrentRoundNumber()});
-      console.log('template rounds', round, clientCurrentRoundNumber());
       return round ? round.round : 0;
     }
     Template.playerStatus.events({
@@ -268,34 +256,19 @@
       d3.select('.targeted').classed('targeted', false);
       d3.select('#' + region).classed('targeted', true);
     }
-    Meteor.autorun(function() {
-      console.log('Players updated!', Players.find());
-    });
 
     Meteor.autosubscribe(function() {
       var game;
       game = Games.findOne();
       if (!game) {
-        console.log('no fucking game');
         return;
       }
-      console.log('autosubbing');
-      if (currentRoundSub === game.currentRound) {
-        console.log('already subbed wtf');
-        return;
-      }
-      console.log('autosubscribe player', Meteor.userId(), game.currentRound);
-      console.log('subscribing to this shiznits', Meteor.userId(), game.currentRound);
-      currentRoundSub = game.currentRound;
-      if (game) {
-        Meteor.subscribe('player-game', game.currentRound);
-      }
+      Meteor.subscribe('players', Meteor.userId(), game.currentRound);
     });
     Meteor.autosubscribe(function() {
       if (typeof clearClientRound !== 'undefined') {
         clearClientRound();
       }
-      console.log('round updates', Session.get('currentRound'));
       Meteor.subscribe('player-round-updates', Session.get('currentRound'));
     });
   }

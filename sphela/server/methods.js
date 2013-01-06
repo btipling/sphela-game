@@ -16,28 +16,33 @@
   }
   Meteor.methods({
     /**
+     * Login to game.
+     * @param {string} userId;
+     */
+    loginGame: function(userId) {
+      if(userId === this.userId) {
+        createPlayer(this.userId);
+      }
+    },
+    /**
      * When a user joins the round the client calls this method.
      */
     joinRound: function() {
       var player, playerRound, round, username, userId;
-      console.log('joining');
       if (_.isNull(this.userId)) {
         return;
       }
       userId = this.userId;
-      console.log('joining', userId);
       round = currentRoundNumber();
       player = Players.findOne({userId: userId});
       username = getUsername(userId);
       if (!username || !player) {
-        console.log('no player or username', username, player);
         return;
       }
       if (_.indexOf(player.rounds, round) === -1) {
-        console.log('updating player round', player, round);
         player.rounds.push(round);
         player.currentRound = round;
-        Players.update({userId: userId}, player);
+        Players.update({_id: player._id}, player);
         playerRound = addPlayerToPlayerRound(userId, round);
         addPlayerToRound(userId, username, playerRound.color);
         addMessage([
@@ -45,10 +50,7 @@
           'has joined round',
           round + '.',
         ].join(' '), 'join', userId);
-      } else {
-        console.log('not updating player round', player, round);
       }
-      console.log('join done', Players.findOne());
     },
     /**
      * User adds a chat message to updates.

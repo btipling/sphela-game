@@ -7,7 +7,7 @@ var global = this;
  * @type {number}
  * @const
  */
-global.TICK_INTERVAL = 1000;
+global.TICK_INTERVAL = 30000;
 
 /**
  * @type {number}
@@ -50,7 +50,7 @@ global.COLORS = [
 
 if (Meteor.isClient) {
   Session.set(sessionKeys.CONNECTED, false);
-  $(window).ready(function() {
+  $(function() {
     var circle,
       projection,
       projectionBg,
@@ -558,8 +558,11 @@ if (Meteor.isClient) {
         Session.set(sessionKeys.CONNECTED, true);
       });
     }
-    Meteor.subscribe('connect', function () {
+    _.defer(function() {
       main();
+    });
+    Meteor.autorun(function() {
+      Meteor.call('loginGame', Meteor.userId());
     });
   });
 }

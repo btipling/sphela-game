@@ -99,7 +99,6 @@ function startRound() {
   currentRound++;
   round = Rounds.findOne({round: round});
   if (!round) {
-    console.log('inserting a fucking round');
     game.currentRound = currentRound;
     game.tick = 0;
     saveGame(game);
@@ -110,8 +109,6 @@ function startRound() {
       numPlayers: [{count: 0, when: new Date().getTime()}]
     });
     addMessage('New round ' + currentRound + ' started!');
-  } else {
-    console.log('Something went wrong, round recreated.');
   }
 }
 
@@ -238,7 +235,7 @@ Players = new Meteor.Collection('players');
  * @param {string} userId The user id.
  * @return {Object} player
  */
-function player(userId) {
+function createPlayer(userId) {
   var player, round;
   if (!_.isString(userId)) {
     return;
