@@ -13,8 +13,7 @@ global.TICK_INTERVAL = 30000;
  * @type {number}
  * @const
  */
-//global.TICKS_IN_GAME = 720;
-global.TICKS_IN_GAME = 10;
+global.TICKS_IN_GAME = 720;
 
 /**
  * The troop count in an empty region.

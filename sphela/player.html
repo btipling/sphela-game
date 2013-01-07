@@ -1,5 +1,5 @@
 <template name="playerStatus">
-<div class="row player-status">
+<div class="player-status">
   {{#if isPlaying}}
     {{> playerColor}}
     {{> playerCounts}}
@@ -71,8 +71,8 @@
 </template>
 
 <template name="attackForm">
-<div class="row attack-form">
-  <form class="form span3">
+<div class="attack-form-container">
+  <form class="attack-form form span3">
     <h3>Attack a region</h3>
     <div>
       <label>Source: {{source}}</label>
@@ -85,10 +85,10 @@
     <div>
     <label>Number of troops:
       <br/>
-      <input type="attack-num-input" value="{{troops}}" />
+      <input type="text" class="attack-num-input" value="{{troops}}" />
     </label>
     </div>
-    <div>
+    <div class="range-selector">
       <input type="range" class="attack-num-range"/>
     </div>
     <div>

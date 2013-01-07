@@ -233,7 +233,22 @@
       vectors = getVectors();
       selected = getSelected(vectors);
       setSelectedTarget(selected);
+      Session.set('attackTroopCount', Math.floor(getRegionTroops() * getTroopFactor()));
     });
+
+    /**
+     * @return {number}
+     */
+    function getRegionTroops() {
+      var id, round, region, troopCount, setCount;
+      round = Rounds.findOne({round: clientCurrentRoundNumber()});
+      region = Session.get('selectedRegion');
+      if (region && round && _.has(round.regions, region.id)) {
+        troopCount =_.last(round.regions[region.id].troopCount)
+        return troopCount.count;
+      }
+      return 0;
+    }
 
     /**
      * @return {Array.<Object>}
@@ -260,16 +275,59 @@
       });
     }
 
+    Template.targetSelection.events({
+      'change .target-selector': handleTargetSelection
+    });
+
     /**
      * @return {number}
      */
     Template.attackForm.troops = function() {
-      return 0;
+      return Session.get('attackTroopCount');;
     };
 
-    Template.targetSelection.events({
-      'change .target-selector': handleTargetSelection
+    Template.attackForm.events({
+      'submit .attack-form': handleAttack,
+      'change .attack-num-range': handleTroopRange,
+      'keyup .attack-num-input': handleTroopInput
     });
+
+    Template.attackForm.preserve([
+      '.attack-num-range'
+    ]);
+
+    /**
+     * @param {Object} event
+     */
+    function handleAttack(event) {
+      event.preventDefault();
+      console.log('attacking');
+    }
+
+    /**
+     * @param {number}
+     */
+    function getTroopFactor() {
+      return (parseInt($('.attack-num-range').val(), 10)/100);
+    }
+
+    /**
+     * @param {Object} event
+     */
+    function handleTroopRange(event) {
+      var troopCount, factor;
+      Session.set('attackTroopCount', Math.floor(getRegionTroops() * getTroopFactor()));
+    }
+
+    /**
+     * @param {Object} event
+     */
+    function handleTroopInput(event) {
+      var regionTroops, num;
+      regionTroops = getRegionTroops();
+      num = parseInt($('.attack-num-input').val(), 10);
+      $('.attack-num-range').val(100 * (num/regionTroops));
+    }
 
     /**
      * @param {Object} event

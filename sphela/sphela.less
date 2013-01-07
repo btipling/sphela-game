@@ -90,6 +90,18 @@ path.targeted {
   fill: @red !important;
 }
 
+.range-selector {
+  background: @lightGray;
+  text-align: center;
+  width: auto;
+  margin: 10px 0px;
+  border-radius: 2px;
+  width: 150px;
+  input[type=range] {
+    width: 120px;
+  }
+}
+
 path:hover {
   fill: @lightOrange !important;
   cursor: pointer;
@@ -224,10 +236,7 @@ path.clicked {
   }
   display: inline-block;
 }
-.attack-form {
+.attack-form-container {
   margin-left: 5px;
   color: @white;
-  form.well {
-    background-color: transparent;
-  }
 }
