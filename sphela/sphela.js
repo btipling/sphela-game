@@ -232,11 +232,6 @@ if (Meteor.isClient) {
         .attr('d', clip);
       centerMap();
       feature = d3.selectAll('path');
-      _.defer(function() {
-        if (_.isFunction(global.updateRegionColors)) {
-          global.updateRegionColors();
-        }
-      });
     }
 
     function centerMap() {

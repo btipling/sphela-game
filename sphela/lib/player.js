@@ -186,7 +186,23 @@
      * @return {Array.<Object>}
      */
     Template.targetSelection.targets = function() {
-      var source, vectors, playerRound, selected;
+      var source, vectors, selected;
+      vectors = getVectors();
+      selected = getSelected(vectors);
+      return _.map(vectors, function(vector) {
+        return {
+          selected: vector === selected,
+          id: vector,
+          name: regionStore[vector].name
+        };
+      });
+    };
+
+    /**
+     * @return {Array.<Object>}
+     */
+    function getVectors() {
+      var source, playerRound;
       source = Session.get('selectedRegion');
       if (!source) {
         return [];
@@ -201,16 +217,23 @@
       if (_.isEmpty(vectors)) {
         return [];
       }
-      selected = Session.get('selectedTarget') || _.first(vectors);
+      return vectors;
+    }
+
+    /**
+     * @param {Array} bectors
+     * return {Object}
+     */
+    function getSelected(vectors) {
+      return Session.get('selectedTarget') || _.first(vectors);
+    }
+
+    Meteor.autorun(function() {
+      var vectors, selected;
+      vectors = getVectors();
+      selected = getSelected(vectors);
       setSelectedTarget(selected);
-      return _.map(vectors, function(vector) {
-        return {
-          selected: vector === selected,
-          id: vector,
-          name: regionStore[vector].name
-        };
-      });
-    };
+    });
 
     /**
      * @return {Array.<Object>}
@@ -236,6 +259,13 @@
         };
       });
     }
+
+    /**
+     * @return {number}
+     */
+    Template.attackForm.troops = function() {
+      return 0;
+    };
 
     Template.targetSelection.events({
       'change .target-selector': handleTargetSelection

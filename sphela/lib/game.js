@@ -43,7 +43,7 @@ var global = this;
     Template.gameInfo.playerCount = function() {
       var round;
       round = Rounds.findOne({round: clientCurrentRoundNumber()});
-      updateRegionColors(round);
+      global.clearClientRound();
       return round ? _.last(round.numPlayers).count : 0;
     };
     Template.gameInfo.tick = function() {
@@ -51,21 +51,6 @@ var global = this;
       game = Games.findOne();
       return (game ? game.tick : 0).toString() + '/' + global.TICKS_IN_GAME;
     };
-    /**
-     * Update all regions with the color of the current owner.
-     * @param {Object} round
-     */
-    function updateRegionColors(round) {
-      if (!round) {
-        return;
-      }
-      _.each(round.playerInfo, function(player) {
-        _.each(player.regions, function(region) {
-          d3.select('#' + region).style('fill', player.color, 'important');
-        });
-      });
-    }
-    global.updateRegionColors = updateRegionColors;
     Meteor.subscribe('tick');
     Meteor.subscribe('round');
   }
