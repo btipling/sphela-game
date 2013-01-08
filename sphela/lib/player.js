@@ -12,8 +12,17 @@
       }
     }
 
+    /**
+     * return {number}
+     */
     Template.playerCounts.regions = function() {
-      return playerRegions(Meteor.userId(), clientCurrentRoundNumber()).length;
+      var userId, regions;
+      userId = Meteor.userId();
+      if (!userId) {
+        return 0;
+      }
+      regions = playerRegions(userId, clientCurrentRoundNumber());
+      return regions ? regions.length || 0 : 0;
     }
 
     /**
@@ -228,13 +237,14 @@
       return Session.get('selectedTarget') || _.first(vectors);
     }
 
-    Meteor.autorun(function() {
-      var vectors, selected;
-      vectors = getVectors();
-      selected = getSelected(vectors);
-      setSelectedTarget(selected);
-      Session.set('attackTroopCount', Math.floor(getRegionTroops() * getTroopFactor()));
-    });
+    /**
+     * @param {string} region
+     */
+    function setSelectedTarget(region) {
+      Session.set('selectedTarget', region);
+      d3.select('.targeted').classed('targeted', false);
+      d3.select('#' + region).classed('targeted', true);
+    }
 
     /**
      * @return {number}
@@ -249,6 +259,21 @@
       }
       return 0;
     }
+
+    /**
+     * @param {number}
+     */
+    function getTroopFactor() {
+      return (parseInt($('.attack-num-range').val(), 10)/100);
+    }
+
+    Meteor.autorun(function() {
+      var vectors, selected;
+      vectors = getVectors();
+      selected = getSelected(vectors);
+      setSelectedTarget(selected);
+      Session.set('attackTroopCount', Math.floor(getRegionTroops() * getTroopFactor()));
+    });
 
     /**
      * @return {Array.<Object>}
@@ -275,6 +300,13 @@
       });
     }
 
+    /**
+     * @param {Object} event
+     */
+    function handleTargetSelection(event) {
+      setSelectedTarget($(event.target).val());
+    }
+
     Template.targetSelection.events({
       'change .target-selector': handleTargetSelection
     });
@@ -286,29 +318,12 @@
       return Session.get('attackTroopCount');;
     };
 
-    Template.attackForm.events({
-      'submit .attack-form': handleAttack,
-      'change .attack-num-range': handleTroopRange,
-      'keyup .attack-num-input': handleTroopInput
-    });
-
-    Template.attackForm.preserve([
-      '.attack-num-range'
-    ]);
-
     /**
      * @param {Object} event
      */
     function handleAttack(event) {
       event.preventDefault();
       console.log('attacking');
-    }
-
-    /**
-     * @param {number}
-     */
-    function getTroopFactor() {
-      return (parseInt($('.attack-num-range').val(), 10)/100);
     }
 
     /**
@@ -329,21 +344,15 @@
       $('.attack-num-range').val(100 * (num/regionTroops));
     }
 
-    /**
-     * @param {Object} event
-     */
-    function handleTargetSelection(event) {
-      setSelectedTarget($(event.target).val());
-    }
+    Template.attackForm.events({
+      'submit .attack-form': handleAttack,
+      'change .attack-num-range': handleTroopRange,
+      'keyup .attack-num-input': handleTroopInput
+    });
 
-    /**
-     * @param {string} region
-     */
-    function setSelectedTarget(region) {
-      Session.set('selectedTarget', region);
-      d3.select('.targeted').classed('targeted', false);
-      d3.select('#' + region).classed('targeted', true);
-    }
+    Template.attackForm.preserve([
+      '.attack-num-range'
+    ]);
 
     Meteor.autosubscribe(function() {
       var game;

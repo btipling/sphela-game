@@ -257,6 +257,7 @@ if (Meteor.isClient) {
      * @return {Object}
      */
     function clip(data) {
+      console.log('in clip');
       return path(circle.clip(data));
     }
 
@@ -303,6 +304,7 @@ if (Meteor.isClient) {
       projection.origin(coords);
       circle.origin(coords);
       currentOrigin = coords;
+      console.log('feature', feature);
       feature.attr('d', clip);
       _.delay(_.bind(moveToCenter, this), TRANSITION_DELAY);
     }
