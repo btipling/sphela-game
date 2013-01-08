@@ -1,5 +1,8 @@
 (function() {
   if (Meteor.isClient) {
+    $(function () {
+      Session.set('attackTroops', 0);
+    });
 
     /**
      * @param {Object} event
@@ -272,7 +275,7 @@
       vectors = getVectors();
       selected = getSelected(vectors);
       setSelectedTarget(selected);
-      Session.set('attackTroopCount', Math.floor(getRegionTroops() * getTroopFactor()));
+      Session.set('attackTroops', Math.floor(getRegionTroops() * getTroopFactor()));
     });
 
     /**
@@ -315,23 +318,53 @@
      * @return {number}
      */
     Template.attackForm.troops = function() {
-      return Session.get('attackTroopCount');;
+      return Session.get('attackTroops') || 0;
     };
 
     /**
      * @param {Object} event
      */
     function handleAttack(event) {
+      var attackTroops, fromRegion, toRegion;
       event.preventDefault();
       console.log('attacking');
+      fromRegion = Session.get('selectedRegion');
+      if (!fromRegion) {
+        return;
+      }
+      toRegion = Session.get('selectedTarget');
+      attackTroops = Session.get('attackTroops');
+      if (fromRegion && toRegion && attackTroops) {
+        console.log('attacked');
+        Meteor.call('attack', fromRegion.id, toRegion, attackTroops);
+      }
+    }
+
+    /**
+     * @param {Object} region
+     * @return {boolean}
+     */
+    function userOwnsRegion(region) {
+      var userId, round;
+      userId = Meteor.userId();
+      if (!userId) {
+        return false;
+      }
+      round = Rounds.findOne({round: clientCurrentRoundNumber()});
+      if (region && round && _.has(round.playerInfo, userId)) {
+        return _.indexOf(round.playerInfo[userId].regions, region.id) !== -1;
+      }
     }
 
     /**
      * @param {Object} event
      */
     function handleTroopRange(event) {
-      var troopCount, factor;
-      Session.set('attackTroopCount', Math.floor(getRegionTroops() * getTroopFactor()));
+      if (userOwnsRegion(Session.get('selectedRegion'))) {
+        Session.set('attackTroops', Math.floor(getRegionTroops() * getTroopFactor()));
+      } else {
+        Session.set('attackTroops', 0);
+      }
     }
 
     /**

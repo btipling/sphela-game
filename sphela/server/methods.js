@@ -77,17 +77,28 @@
      * @param {string} region
      */
     dropAttack: function(region) {
-      var username, regionObj, regionName, userId;
       if (_.isNull(this.userId)) {
         return;
       }
-      userId = this.userId;
       if (!_.has(regionStore, region)) {
         return;
       }
-      username = getUsername(userId);
-      regionName = regionStore[region].name;
-      combat.dropAttack(userId, region);
+      combat.dropAttack(this.userId, region);
+    },
+    /**
+     * Attack a region from another region.
+     * @param {string} fromRegion
+     * @param {string} toRegion
+     * @param {number} troops
+     */
+    attack: function(fromRegion, toRegion, troops) {
+      if(_.isNull(this.userId)) {
+        return;
+      }
+      if (!_.has(regionStore, fromRegion) || !_.has(regionStore, toRegion)) {
+        return;
+      }
+      combat.attack(this.userId, fromRegion, toRegion, troops);
     }
   });
 })();

@@ -80,6 +80,68 @@ combat = {};
 
   /**
    * @param {string} userId
+   * @param {string} fromRegion
+   * @param {string} toRegion
+   * @param {number} attackTroops
+   */
+  function attack(userId, fromRegion, toRegion, attackTroops) {
+    var round, availTroops, owner, regionData, username, user, regionObj;
+    user = Meteor.users.findOne({_id: userId});
+    if (!user) {
+      return;
+    }
+    username = user.profile.name;
+    //Validate user owns region.      
+    round = Rounds.findOne({round: currentRoundNumber()});
+    if (!_.has(round.playerInfo, userId)) {
+      return;
+    }
+    if (!_.has(round.regions, fromRegion)) {
+      return;
+    }
+    regionData = round.regions[fromRegion];
+    if (!regionData || _.isEmpty(regionData.owner)) {
+      return;
+    }
+    //
+    // Validate that user doesn't own attacking region.
+    //
+    owner = _.last(regionData.owner);
+    if (!owner || owner.userId !== userId) {
+      return;
+    }
+    // Validate user has enough troops in the region or use min amount.
+    availTroops = _.last(regionData.troopCount).count || 0;
+    attackTroops = availTroops < attackTroops ? availTroops : attackTroops;
+    round = currentRoundNumber();
+    // Remove attack troops from region.
+    setRegionTroopCount(round, fromRegion, availTroops - attackTroops);
+    // Call attack.
+    outcome = attackRegion(userId, round, toRegion, attackTroops);
+    if (outcome) {
+      regionObj = regionStore[fromRegion];
+      addMessage([
+          username,
+          'has taken',
+          regionObj.name + '.'
+      ].join(' '), 'attack');
+      addPlayerRoundMessage(userId, round, [
+        'Your attack on',
+        regionObj.name,
+        'succeeded.'
+        ].join(' '));
+    } else {
+      addPlayerRoundMessage(userId, round, [
+        'Your attack on',
+        regionObj.name,
+        'failed.'
+        ].join(' '));
+    }
+  }
+  combat.attack = attack;
+
+  /**
+   * @param {string} userId
    * @param {number} round
    * @param {string} region
    * @param {number} attackTroops
@@ -108,7 +170,9 @@ combat = {};
     }
     outcome = combat_(attackTroops, global.EMPTY_REGION_TROOPS);
     if (outcome.attackerWin) {
+      console.log('setting winner', userId, round, region);
       setRegionOwner(userId, round, region);
+      console.log('setting troops', region, outcome);
       setRegionTroopCount(round, region, outcome.troopsLeft);
       return true;
     }
