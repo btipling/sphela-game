@@ -65,7 +65,7 @@ global = this;
       if (!_.has(roundRegions, vector)) {
         return;
       }
-      if (_.last(roundRegions[vector].owner) === userId) {
+      if (_.last(roundRegions[vector].owner).userId === userId) {
         numVectorsNotOwned -= 1;
         newTroops += 1;
       }

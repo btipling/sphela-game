@@ -80,6 +80,31 @@ combat = {};
 
   /**
    * @param {string} userId
+   * @param {string} region
+   * @param {Object} round
+   * @return {boolean}
+   */
+  function userOwnsRegion(userId, region, round) {
+    var regionData;
+    if (!_.has(round.playerInfo, userId)) {
+      return false;
+    }
+    if (!_.has(round.regions, region)) {
+      return false;
+    }
+    regionData = round.regions[region];
+    if (!regionData || _.isEmpty(regionData.owner)) {
+      return;
+    }
+    owner = _.last(regionData.owner);
+    if (owner) {
+      return owner.userId === userId;
+    }
+    return false;
+  }
+
+  /**
+   * @param {string} userId
    * @param {string} fromRegion
    * @param {string} toRegion
    * @param {number} attackTroops
@@ -91,10 +116,14 @@ combat = {};
       return;
     }
     username = user.profile.name;
-    //Validate user owns region.      
     round = Rounds.findOne({round: currentRoundNumber()});
-    if (!_.has(round.playerInfo, userId)) {
-      return;
+    // Validate user owns region.      
+    if (!userOwnsRegion(userId, fromRegion, round)) {
+      return
+    }
+    // Don't allow user to attack own region.
+    if (userOwnsRegion(userId, toRegion, round)) {
+      return
     }
     if (!_.has(round.regions, fromRegion)) {
       return;
@@ -103,9 +132,6 @@ combat = {};
     if (!regionData || _.isEmpty(regionData.owner)) {
       return;
     }
-    //
-    // Validate that user doesn't own attacking region.
-    //
     owner = _.last(regionData.owner);
     if (!owner || owner.userId !== userId) {
       return;
