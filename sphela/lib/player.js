@@ -154,7 +154,7 @@
       if (!playerRound) {
         return [];
       }
-      return playerRound.messages;
+      return playerRound.messages.reverse();
     };
 
     /**
@@ -411,6 +411,7 @@
       regionTroops = getRegionTroops();
       num = parseInt($('.attack-num-input').val(), 10);
       $('.attack-num-range').val(100 * (num/regionTroops));
+      Session.set('attackTroops', num);
     }
 
     Template.attackForm.events({

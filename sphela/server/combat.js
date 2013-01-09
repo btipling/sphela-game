@@ -110,7 +110,7 @@ combat = {};
    * @param {number} attackTroops
    */
   function attack(userId, fromRegion, toRegion, attackTroops) {
-    var round, availTroops, owner, regionData, username, user, regionObj;
+    var round, availTroops, owner, regionData, username, user, toRegionObj;
     user = Meteor.users.findOne({_id: userId});
     if (!user) {
       return;
@@ -140,26 +140,26 @@ combat = {};
     availTroops = _.last(regionData.troopCount).count || 0;
     attackTroops = availTroops < attackTroops ? availTroops : attackTroops;
     round = currentRoundNumber();
+    toRegionObj = regionStore[toRegion];
     // Remove attack troops from region.
     setRegionTroopCount(round, fromRegion, availTroops - attackTroops);
     // Call attack.
     outcome = attackRegion(userId, round, toRegion, attackTroops);
     if (outcome) {
-      regionObj = regionStore[fromRegion];
       addMessage([
           username,
           'has taken',
-          regionObj.name + '.'
+          toRegionObj.name + '.'
       ].join(' '), 'attack');
       addPlayerRoundMessage(userId, round, [
         'Your attack on',
-        regionObj.name,
+        toRegionObj.name,
         'succeeded.'
         ].join(' '));
     } else {
       addPlayerRoundMessage(userId, round, [
         'Your attack on',
-        regionObj.name,
+        toRegionObj.name,
         'failed.'
         ].join(' '));
     }
@@ -196,9 +196,7 @@ combat = {};
     }
     outcome = combat_(attackTroops, global.EMPTY_REGION_TROOPS);
     if (outcome.attackerWin) {
-      console.log('setting winner', userId, round, region);
       setRegionOwner(userId, round, region);
-      console.log('setting troops', region, outcome);
       setRegionTroopCount(round, region, outcome.troopsLeft);
       return true;
     }
