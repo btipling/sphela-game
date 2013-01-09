@@ -198,17 +198,22 @@ if (Meteor.isClient) {
     arc =  d3.geo.greatArc().precision(PRECISION);
 
     function findLeftOver() {
+      var allRegions;
       if (!dataStore) {
         console.log('No datastore, findLeftOver');
         return;
       }
-      Session.set(sessionKeys.ALL_REGIONS, _.map(dataStore.features,
+      allRegions = _.map(dataStore.features,
         function(item) {
         return {
           name: item.properties.name,
           id: item.id
         };
-      }));
+      });
+      var wtf = allRegions.sort(function(a, b) {
+        return a.name.localeCompare(b.name);
+      });
+      Session.set('allRegions', allRegions);
     }
 
     /**
@@ -554,7 +559,7 @@ if (Meteor.isClient) {
     };
 
     Template.leftOver.leftOverRegions = function(regions) {
-      return Session.get(sessionKeys.ALL_REGIONS);;
+      return Session.get('allRegions');
     };
     /**
      * @param {Object} data

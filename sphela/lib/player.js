@@ -295,7 +295,7 @@
         return canSelect({id: region}, playerRound, round);
       });
       availableRegions.sort(function(a, b) {
-        return regionStore[a].name > regionStore[b].name;
+        return regionStore[a].name.localeCompare(regionStore[b].name);
       });
       selectedRegion = Session.get('selectedRegion');
       return _.map(availableRegions, function(region) {
