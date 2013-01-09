@@ -53,6 +53,7 @@
       {{#each sources}}
       <option value="{{this.id}}"
       {{#if this.selected}}selected="selected"{{/if}}
+      {{#if this.disabled}}disabled="disabled"{{/if}}
       >{{this.name}}</option>
       {{/each}}
     </select>

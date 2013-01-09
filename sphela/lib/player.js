@@ -282,7 +282,7 @@
      * @return {Array.<Object>}
      */
     Template.sourceSelection.sources = function() {
-      var playerRound, availableRegions, round, selectedRegion;
+      var playerRound, availableRegions, round, selectedRegion, selects, hasSelection;
       playerRound = getPlayerRound();
       if (!playerRound || _.isEmpty(playerRound.regions)) {
         return [];
@@ -298,13 +298,29 @@
         return regionStore[a].name.localeCompare(regionStore[b].name);
       });
       selectedRegion = Session.get('selectedRegion');
-      return _.map(availableRegions, function(region) {
+      hasSelection = false;
+      selects = _.map(availableRegions, function(region) {
+        var isSelected;
+        isSelected = false;
+        if (!hasSelection && selectedRegion && selectedRegion.id === region) {
+          hasSelection = isSelected = true;
+        }
         return {
-          selected: selectedRegion ? selectedRegion.id === region : false,
+          selected: isSelected,
+          disabled: false,
           name: regionStore[region].name,
           id: region
         };
       });
+      if (!hasSelection) {
+        selects.unshift({
+          selected: true,
+          name: 'Select a region to attack from',
+          id: '',
+          disabled: true
+        });
+      }
+      return selects;
     }
 
     /**
