@@ -104,6 +104,23 @@ combat = {};
   }
 
   /**
+   * @param {Object} round
+   * @param {string} region
+   * @return {number}
+   */
+  function getAvailTroops(round, region) {
+    var regionData;
+    regionData = round.regions[region];
+    if (!regionData) {
+      throw 'Invalid region provided to getAvailTroops.';
+    }
+    if (_.isEmpty(regionData.owner)) {
+      return global.EMPTY_REGION_TROOPS;
+    }
+    return _.last(regionData.troopCount).count || 0;
+  }
+
+  /**
    * @param {string} userId
    * @param {string} fromRegion
    * @param {string} toRegion
@@ -117,6 +134,9 @@ combat = {};
     }
     username = user.profile.name;
     round = Rounds.findOne({round: currentRoundNumber()});
+    if (!_.has(round.regions, fromRegion)) {
+      return;
+    }
     // Validate user owns region.      
     if (!userOwnsRegion(userId, fromRegion, round)) {
       return
@@ -125,19 +145,8 @@ combat = {};
     if (userOwnsRegion(userId, toRegion, round)) {
       return
     }
-    if (!_.has(round.regions, fromRegion)) {
-      return;
-    }
-    regionData = round.regions[fromRegion];
-    if (!regionData || _.isEmpty(regionData.owner)) {
-      return;
-    }
-    owner = _.last(regionData.owner);
-    if (!owner || owner.userId !== userId) {
-      return;
-    }
     // Validate user has enough troops in the region or use min amount.
-    availTroops = _.last(regionData.troopCount).count || 0;
+    availTroops = getAvailTroops(round, fromRegion);
     attackTroops = availTroops < attackTroops ? availTroops : attackTroops;
     round = currentRoundNumber();
     toRegionObj = regionStore[toRegion];
@@ -167,40 +176,76 @@ combat = {};
   combat.attack = attack;
 
   /**
-   * @param {string} userId
+   * @param {string} attackerId
    * @param {number} round
    * @param {string} region
    * @param {number} attackTroops
    * @return {boolean} Whether attack succeeded.
    */
-  function attackRegion(userId, round, region, attackTroops) {
-    var defensePlayerRound, attackPlayerRound, defenderId;
+  function attackRegion(attackerId, round, region, attackTroops) {
+    var defenderId, outcome, attacker, attackername, regionObj;
     defenderId = regionOwner(round, region);
     if (!defenderId) {
-      return attackEmptyRegion(userId, round, region, attackTroops);
+      outcome = attackEmptyRegion(attackerId, round, region, attackTroops);
+    } else {
+      outcome = attackOwnedRegion(attackerId, defenderId, round, region,
+        attackTroops);
+      // Let defender know region was attacked and troops left.
+      attacker = Meteor.users.findOne({_id: attackerId});
+      if (!attacker) {
+        throw 'Invalid attackerId in attackRegion';
+      }
+      attackername = attacker.profile.name;
+      regionObj = regionStore[region];
+      if (outcome.attackerWin) {
+        addPlayerRoundMessage(defenderId, round, [
+          'You lost',
+          regionObj.name,
+          'to',
+          attackername + '.'
+          ].join(' '), 'attack-failure');
+      } else {
+        addPlayerRoundMessage(defenderId, round, [
+          attackername,
+          'attacked',
+          regionObj.name + '.',
+          outcome.troopsLeft,
+          'troops left' + '.'
+          ].join(' '), 'attack-failure');
+      }
     }
+    setRegionTroopCount(round, region, outcome.troopsLeft);
+    if (outcome.attackerWin) {
+      setRegionOwner(attackerId, round, region);
+    }
+    return outcome.attackerWin;
   }
 
   /**
-   * @param {string} userId
+   * @param {string} attackerId
+   * @param {string} defenderId
+   * @param {number} round
+   * @param {string} region
+   * @param {number} attackTroops
+   * @return {boolean} Whether attack succeeded
+   */
+  function attackOwnedRegion(attackerId, defenderId, round, region,
+      attackTroops) {
+    var defendTroops, round;
+    round = Rounds.findOne({round: currentRoundNumber()});
+    defendTroops = getAvailTroops(round, region);
+    return combat_(attackTroops, defendTroops);
+  }
+
+  /**
+   * @param {string} attackerId
    * @param {number} round
    * @param {string} region
    * @param {number} attackTroops
    * @return {boolean} Whether attack succeeded.
    */
-  function attackEmptyRegion(userId, round, region, attackTroops) {
-    var attackPlayerRound, outcome;
-    attackPlayerRound = PlayerRounds.findOne({userId: userId, round: round});
-    if (!attackPlayerRound) {
-      return false;
-    }
-    outcome = combat_(attackTroops, global.EMPTY_REGION_TROOPS);
-    if (outcome.attackerWin) {
-      setRegionOwner(userId, round, region);
-      setRegionTroopCount(round, region, outcome.troopsLeft);
-      return true;
-    }
-    return false;
+  function attackEmptyRegion(attackerId, round, region, attackTroops) {
+    return combat_(attackTroops, global.EMPTY_REGION_TROOPS);
   }
 
   /**
