@@ -144,14 +144,17 @@ if (Meteor.isClient) {
       moveToCenter();
     });
     $(window).on('popstate', function() {
-      var id, data;
+      var id, data, region;
       id = window.location.pathname.substr(1);
       if (!dataStore) {
         console.log('No dataStore, popState');
         return;
       }
       data = _.where(dataStore.features, {id: id});
-      waitForId(data);
+      region = _.first(data);
+      if (region) {
+        waitForId(region);
+      }
     });
 
     /**
@@ -163,18 +166,18 @@ if (Meteor.isClient) {
     }
 
     /**
-     * @param {Object} data
+     * @param {Object} region
      */
-    function waitForId(data) {
-      if (!data || _.isEmpty(data)) {
+    function waitForId(region) {
+      if (!region) {
         return;
       }
-      if (!getTarget(_.first(data).id)) {
+      if (!getTarget(region.id)) {
         _.defer(function() {
-          waitForId(data);
+          waitForId(region);
         });
       } else {
-        selectRegion(data);
+        selectRegion(region, true);
       }
     }
 
@@ -292,7 +295,7 @@ if (Meteor.isClient) {
          * Checking to make sure we actually made it. This is a noop if
          * we are actually there.
          */
-        selectRegion(currentRegion);
+        selectRegion(currentRegion, true);
         return;
       }
       if (!feature) {
@@ -311,16 +314,16 @@ if (Meteor.isClient) {
      * @param {Object} event
      */
     function handlePath(event) {
-      var id, data, name;
+      var id, data, name, region;
       id = event.target.id;
       if (!dataStore) {
         console.log('No datastore, handlePath');
         return;
       }
       data = _.where(dataStore.features, {id: id});
-      name = _.first(data).properties.name;
-      history.pushState({data: data}, name, id);
-      selectRegion(data);
+      region = _.first(data);
+      name = region.properties.name;
+      selectRegion(region);
     }
 
     /**
@@ -339,24 +342,35 @@ if (Meteor.isClient) {
 
     /**
      * @param {Array<Object>} regions;
+     * @param {boolean=} opt_cancelPush Set to cancel updating browser history.
      */
-    function selectRegion(regions) {
+    function selectRegion(region, opt_cancelPush) {
       var region, pixel, coords, target, parent;
       stopZoom();
-      // currentRegion is a shared variable.
-      currentRegion = regions;
-      region = _.first(regions);
       target = getTarget(region.id);
       d3.selectAll('.clicked').classed('clicked', false);
       d3.select(target).classed('clicked', true);
-      Session.set('selectedRegion', region);
-      Session.set('requestedRegion', region);
       highlightVectors(region.id);
       toTop(region.id);
       pixel = path.centroid(region.geometry);
       coords = projection.invert(pixel);
       reCenterMap(coords);
+      // currentRegion is a shared variable.
+      if (region === currentRegion) {
+        /*
+         * We do this after setting the regions as this is abused to center the
+         * map until it's actually at the center. :/
+         */
+        return;
+      }
+      Session.set('requestedRegion', region);
+      Session.set('selectedRegion', region);
+      currentRegion = region;
+      if (!opt_cancelPush) {
+        history.pushState({data: region}, region.properties.name, region.id);
+      }
     }
+    global.selectRegion = selectRegion;
 
     /**
      * Put all the vectors and region on top of the dom stack so their strokes
@@ -443,7 +457,7 @@ if (Meteor.isClient) {
      * @param {Object} event
      */
     function handleRegionClick(event) {
-      var id, name;
+      var id, name, region;
       event.preventDefault();
       id = d3.select(event.target).attr('data-id');
       if (!dataStore) {
@@ -451,11 +465,11 @@ if (Meteor.isClient) {
         return;
       }
       data = _.where(dataStore.features, {id: id});
-      name = _.first(data).properties.name;
+      region = _.first(data);
+      name = region.properties.name;
       d3.selectAll('.clicked').classed('clicked', false);
       d3.select('#' + id).classed('clicked', true);
-      history.pushState({data: data}, name, id);
-      selectRegion(data);
+      selectRegion(region);
     }
 
     /**

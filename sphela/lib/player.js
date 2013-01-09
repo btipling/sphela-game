@@ -282,7 +282,7 @@
      * @return {Array.<Object>}
      */
     Template.sourceSelection.sources = function() {
-      var playerRound, availableRegions, round;
+      var playerRound, availableRegions, round, selectedRegion;
       playerRound = getPlayerRound();
       if (!playerRound || _.isEmpty(playerRound.regions)) {
         return [];
@@ -294,14 +294,33 @@
       availableRegions = _.filter(playerRound.regions, function(region) {
         return canSelect({id: region}, playerRound, round);
       });
+      selectedRegion = Session.get('selectedRegion');
       return _.map(availableRegions, function(region) {
         return {
-          selected: Session.get('selectedRegion') === region,
+          selected: selectedRegion ? selectedRegion.id === region : false,
           name: regionStore[region].name,
           id: region
         };
       });
     }
+
+    /**
+     * @param {Object} event
+     */
+    function handleSourceSelect(event) {
+      var id, regions;
+      id = $(event.target).val();
+      regions = _.where(dataStore.features, {id: id});
+      if (!regions || _.isEmpty(regions)) { 
+        return;
+      }
+      global.selectRegion(_.first(regions));
+    }
+
+    Template.sourceSelection.events({
+      'change .source-selector': handleSourceSelect
+    });
+
 
     /**
      * @param {Object} event
@@ -327,7 +346,6 @@
     function handleAttack(event) {
       var attackTroops, fromRegion, toRegion;
       event.preventDefault();
-      console.log('attacking');
       fromRegion = Session.get('selectedRegion');
       if (!fromRegion) {
         return;
@@ -335,7 +353,6 @@
       toRegion = Session.get('selectedTarget');
       attackTroops = Session.get('attackTroops');
       if (fromRegion && toRegion && attackTroops) {
-        console.log('attacked');
         Meteor.call('attack', fromRegion.id, toRegion, attackTroops);
       }
     }
