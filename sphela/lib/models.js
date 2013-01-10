@@ -151,7 +151,7 @@ function getRegion(round, region) {
   r = Rounds.findOne({round: round});
   regions = r.regions;
   if (!_.has(regions, region)) {
-    regions[region] = {
+    return {
       owner: [],
       troopCount: []
     };
@@ -410,7 +410,7 @@ function removeFromPlayerRegions(userId, round, region) {
   if (!playerRound) {
     return;
   }
-  playerRound.regions = _.without(playerRound.regions, [region]);
+  playerRound.regions = _.without(playerRound.regions, region);
   playerRound.regionCount.push({
     count: playerRound.regions.length,
     when: new Date().getTime()
@@ -418,7 +418,7 @@ function removeFromPlayerRegions(userId, round, region) {
   PlayerRounds.update({_id: playerRound._id}, playerRound, global.NOOP);
   round_ = currentRound();
   regions = round_.playerInfo[userId].regions;
-  round_.playerInfo[userId].regions = _.without(regions, [region]);
+  round_.playerInfo[userId].regions = _.without(regions, region);
   Rounds.update({_id: round_._id}, round_, global.NOOP);
 };
 

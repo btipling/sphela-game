@@ -183,11 +183,12 @@ combat = {};
    * @return {boolean} Whether attack succeeded.
    */
   function attackRegion(attackerId, round, region, attackTroops) {
-    var defenderId, outcome, attacker, attackername, regionObj;
-    defenderId = regionOwner(round, region);
-    if (!defenderId) {
+    var defender, defenderId, outcome, attacker, attackername, regionObj;
+    defender = regionOwner(round, region);
+    if (!defender) {
       outcome = attackEmptyRegion(attackerId, round, region, attackTroops);
     } else {
+      defenderId = defender.userId;
       outcome = attackOwnedRegion(attackerId, defenderId, round, region,
         attackTroops);
       // Let defender know region was attacked and troops left.
@@ -231,9 +232,9 @@ combat = {};
    */
   function attackOwnedRegion(attackerId, defenderId, round, region,
       attackTroops) {
-    var defendTroops, round;
-    round = Rounds.findOne({round: currentRoundNumber()});
-    defendTroops = getAvailTroops(round, region);
+    var defendTroops, roundObj;
+    roundObj = Rounds.findOne({round: round});
+    defendTroops = getAvailTroops(roundObj, region);
     return combat_(attackTroops, defendTroops);
   }
 
