@@ -95,6 +95,9 @@ global = this;
     playerRounds = PlayerRounds.find({round:round.round});
     playerRounds.forEach(_.bind(updatePlayerTroops, null, round));
     Rounds.update({_id: round._id}, round, global.NOOP);
+    _.each(round.playerInfo, function(user, userId) {
+      updatePlayerTotalTroops(userId, round);
+    });
   }
   global.updateTroopCounts = updateTroopCounts;
 })();

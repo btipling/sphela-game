@@ -51,8 +51,18 @@
     /**
      * @return {number}
      */
-    Template.playerCounts.floatingTroops = function() {
-      return getFloatingTroopsCount();
+    Template.playerCounts.totalTroops = function() {
+      var playerRound, userId;
+      userId = Meteor.userId();
+      if (!userId) {
+        return 0;
+      }
+      playerRound = PlayerRounds.findOne({userId: userId,
+        round: clientCurrentRoundNumber()});
+      if (!playerRound) {
+        return 0;
+      }
+      return _.last(playerRound.totalTroops).count;
     };
 
     /**

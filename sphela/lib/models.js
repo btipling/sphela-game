@@ -191,7 +191,7 @@ function setRegionOwner(userId, round, region) {
  * @param {number} troopCount
  */
 function setRegionTroopCount(round, region, troopCount) {
-  var regionObj;
+  var regionObj, owner;
   regionObj = getRegion(round, region);
   regionObj.troopCount.push({
     count: troopCount,
@@ -200,6 +200,10 @@ function setRegionTroopCount(round, region, troopCount) {
   roundObj = currentRound();
   roundObj.regions[region] = regionObj;
   Rounds.update({_id: roundObj._id}, roundObj, global.NOOP);
+  owner = regionObj.owner;
+  if (owner && !_.isEmpty(owner)) {
+    updatePlayerTotalTroops(_.last(owner).userId, roundObj);
+  }
 }
 
 /**
@@ -353,10 +357,29 @@ function addPlayerRoundMessage(userId, round, message, opt_type) {
 
 /**
  * @param {string} userId
- * @param {number} round
- * @param {number} troops
+ * @param {number|Object} round
  */
-function setPlayerTotalTroops(userId, round, troops) {
+function updatePlayerTotalTroops(userId, round) {
+  var round, total, playerRound;
+  total =  0;
+  if (!userId) {
+    return;
+  }
+  if (_.isNumber(round)) {
+    round = Rounds.findOne({round: round});
+  }
+  if (!_.has(round.playerInfo, userId)) {
+    return;
+  }
+  _.each(round.playerInfo[userId].regions, function(region) {
+    if (_.has(round.regions, region)) {
+      total += _.last(round.regions[region].troopCount).count;
+    }
+  });
+  playerRound = PlayerRounds.findOne({userId: userId, round: round.round});
+  total += _.last(playerRound.floatingTroops).count;
+  playerRound.totalTroops.push({count: total, time: new Date().getTime()});
+  PlayerRounds.update({_id: playerRound._id}, playerRound, global.NOOP);
 }
 
 /**
