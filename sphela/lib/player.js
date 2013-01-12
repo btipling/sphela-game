@@ -2,7 +2,20 @@
   if (Meteor.isClient) {
     $(function () {
       Session.set('attackTroops', 0);
+      Session.set('moveTroops', 0);
     });
+
+    /**
+     * @return {boolean}
+     */
+    function isAttacking() {
+      var selectedTab;
+      selectedTab = Session.get('selectedAttackTab');
+      if (!selectedTab) {
+        return true;
+      }
+      return  selectedTab === 'attack-region';
+    }
 
     /**
      * @param {Object} event
@@ -163,7 +176,7 @@
      * @param {Object=} opt_round
      * @return {boolean}
      */
-    function canSelect(opt_region, opt_playerRound, opt_round) {
+    function canSelectTarget(opt_region, opt_playerRound, opt_round) {
       var selectedRegion, playerRound, round, troopCount;
       if (_.isUndefined(opt_region)) {
         selectedRegion = Session.get('selectedRegion');
@@ -190,16 +203,21 @@
       }
       return _.last(troopCount).count > 0;
     }
-    Template.targetSelection.canSelect = function () {
-      return canSelect();
+
+    /**
+     * @return {Boolean}
+     */
+    Template.targetSelection.canSelectTarget = function () {
+      return canSelectTarget();
     };
 
     /**
+     * @param {Function} filterFunc
      * @return {Array.<Object>}
      */
-    Template.targetSelection.targets = function() {
+    function targetSelection(filterFunc) {
       var source, vectors, selected;
-      vectors = getVectors();
+      vectors = getVectors(filterFunc);
       selected = getSelected(vectors);
       return _.map(vectors, function(vector) {
         return {
@@ -208,24 +226,55 @@
           name: regionStore[vector].name
         };
       });
-    };
+    }
+
+    /**
+     * @param {Object} playerRound
+     * @param {string} region
+     * @return {boolean}
+     */
+    function filterNonTargetsOut(playerRound, region) {
+        return _.indexOf(playerRound.regions, region) === -1;
+    }
+
+    /**
+     * @param {Object} playerRound
+     * @param {string} region
+     * @return {boolean}
+     */
+    function filterOutTargets(playerRound, region) {
+        return _.indexOf(playerRound.regions, region) !== -1;
+    }
 
     /**
      * @return {Array.<Object>}
      */
-    function getVectors() {
+    Template.targetSelection.targets = _.bind(targetSelection, null,
+        filterNonTargetsOut);
+
+    /**
+     * @param {Function=} opt_filterFunc
+     * @return {Array.<Object>}
+     */
+    function getVectors(opt_filterFunc) {
       var source, playerRound;
+      if (typeof regionStore === 'undefined') {
+        return [];
+      }
       source = Session.get('selectedRegion');
       if (!source) {
         return [];
       }
       playerRound = getPlayerRound();
-      if (!canSelect(source, playerRound)) {
+      if (!canSelectTarget(source, playerRound)) {
         return [];
       }
-      vectors = _.filter(regionStore[source.id].vectors, function(region) {
-        return _.indexOf(playerRound.regions, region) === -1;
-      });
+      if (_.isFunction(opt_filterFunc)) {
+        vectors = _.filter(regionStore[source.id].vectors,
+            _.bind(opt_filterFunc, null, playerRound));
+      } else {
+        vectors = regionStore[source.id].vectors;
+      }
       if (_.isEmpty(vectors)) {
         return [];
       }
@@ -234,10 +283,22 @@
 
     /**
      * @param {Array} bectors
+     * @param {Function=}  opt_filterFunc
      * return {Object}
      */
-    function getSelected(vectors) {
-      return Session.get('selectedTarget') || _.first(vectors);
+    function getSelected(vectors, opt_filterFunc) {
+      var filterFunc, target, filtered;
+      if (_.isFunction(opt_filterFunc)) {
+        filterFunc = opt_filterFunc;
+      } else {
+        filterFunc = filterNonTargetsOut;
+      }
+      target = Session.get('selectedTarget');
+      filtered = _.filter(vectors, _.bind(filterFunc, null, getPlayerRound()));
+      if (_.indexOf(filtered, target) === -1) {
+        return _.first(filtered);
+      }
+      return target;
     }
 
     /**
@@ -264,25 +325,37 @@
     }
 
     /**
-     * @param {number}
+     * @param {boolean} attacking
+     * @return {number}
      */
-    function getTroopFactor() {
-      return (parseInt($('.attack-num-range').val(), 10)/100);
+    function getTroopFactor(attacking) {
+      if (attacking) {
+        return (parseInt($('.attack-num-range').val(), 10)/100);
+      } else {
+        return (parseInt($('.move-num-range').val(), 10)/100);
+      }
     }
 
     Meteor.autorun(function() {
-      var vectors, selected;
+      var vectors, selected, attacking;
       vectors = getVectors();
-      selected = getSelected(vectors);
+      attacking = isAttacking();
+      if (attacking) {
+        selected = getSelected(vectors, filterNonTargetsOut);
+      } else {
+        selected = getSelected(vectors, filterOutTargets);
+      }
       setSelectedTarget(selected);
-      Session.set('attackTroops', Math.floor(getRegionTroops() * getTroopFactor()));
+      Session.set(attacking ? 'attackTroops' : 'moveTroops',
+        Math.floor(getRegionTroops() * getTroopFactor(attacking)));
     });
 
     /**
      * @return {Array.<Object>}
      */
     Template.sourceSelection.sources = function() {
-      var playerRound, availableRegions, round, selectedRegion, selects, hasSelection;
+      var playerRound, availableRegions, round, selectedRegion, selects,
+        hasSelection;
       playerRound = getPlayerRound();
       if (!playerRound || _.isEmpty(playerRound.regions)) {
         return [];
@@ -292,7 +365,7 @@
         return [];
       }
       availableRegions = _.filter(playerRound.regions, function(region) {
-        return canSelect({id: region}, playerRound, round);
+        return canSelectTarget({id: region}, playerRound, round);
       });
       availableRegions.sort(function(a, b) {
         return regionStore[a].name.localeCompare(regionStore[b].name);
@@ -315,7 +388,7 @@
       if (!hasSelection) {
         selects.unshift({
           selected: true,
-          name: 'Select a region to attack from',
+          name: 'Select a region',
           id: '',
           disabled: true
         });
@@ -350,6 +423,32 @@
 
     Template.targetSelection.events({
       'change .target-selector': handleTargetSelection
+    });
+
+    /**
+     * @param {Object} event
+     */
+    function handleTabSelection(event) {
+      var target, tab;
+      event.preventDefault();
+      target = event.target;
+      tab = _.last(target.href.split('#'));
+      Session.set('selectedAttackTab', tab);
+    }
+
+    /**
+     * @return {boolean}
+     */
+    Template.territoryWarScreen.isAttacking = function() {
+      return isAttacking();
+    }
+
+    Template.territoryWarScreen.preserve([
+      '#war-tabs'
+    ]);
+
+    Template.territoryWarScreen.events({
+      'click .nav-tabs li': handleTabSelection
     });
 
     /**
@@ -396,10 +495,18 @@
      * @param {Object} event
      */
     function handleTroopRange(event) {
-      if (userOwnsRegion(Session.get('selectedRegion'))) {
-        Session.set('attackTroops', Math.floor(getRegionTroops() * getTroopFactor()));
+      var key, attacking;
+      attacking = isAttacking();
+      if (attacking) {
+        key = 'attackTroops';
       } else {
-        Session.set('attackTroops', 0);
+        key = 'moveTroops';
+      }
+      if (userOwnsRegion(Session.get('selectedRegion'))) {
+        Session.set(key,
+            Math.floor(getRegionTroops() * getTroopFactor(attacking)));
+      } else {
+        Session.set(key, 0);
       }
     }
 
@@ -407,7 +514,7 @@
      * @param {Object} event
      */
     function handleTroopInput(event) {
-      var regionTroops, num;
+      var regionTroops, num, troops;
       regionTroops = getRegionTroops();
       num = parseInt($('.attack-num-input').val(), 10);
       $('.attack-num-range').val(100 * (num/regionTroops));
@@ -422,6 +529,64 @@
 
     Template.attackForm.preserve([
       '.attack-num-range'
+    ]);
+
+    /**
+     * @return {Array}
+     */
+    Template.moveTargetSelection.targets = _.bind(targetSelection, null,
+      filterOutTargets);
+
+    /**
+     * @return {Boolean}
+     */
+    Template.moveTargetSelection.canSelectTarget = function () {
+      return canSelectTarget();
+    };
+
+    /**
+     * @return {number}
+     */
+    Template.moveForm.troops = function() {
+      return Session.get('moveTroops') || 0;
+    }
+
+    /**
+     * @param {Object} event
+     */
+    function handleMoveTroopInput(event) {
+      var regionTroops, num, troops;
+      regionTroops = getRegionTroops();
+      num = parseInt($('.move-num-input').val(), 10);
+      $('.move-num-range').val(100 * (num/regionTroops));
+      Session.set('moveTroops', num);
+    }
+
+    /**
+     * @param {Object} event
+     */
+    function handleMove(event) {
+      var moveTroops, fromRegion, toRegion;
+      event.preventDefault();
+      fromRegion = Session.get('selectedRegion');
+      if (!fromRegion) {
+        return;
+      }
+      toRegion = Session.get('selectedTarget');
+      moveTroops = Session.get('moveTroops');
+      if (fromRegion && toRegion && moveTroops) {
+        Meteor.call('move', fromRegion.id, toRegion, moveTroops);
+      }
+    }
+
+    Template.moveForm.events({
+      'submit .move-form': handleMove,
+      'change .move-num-range': handleTroopRange,
+      'keyup .move-num-input': handleMoveTroopInput
+    });
+
+    Template.moveForm.preserve([
+      '.move-num-range'
     ]);
 
     Meteor.autosubscribe(function() {

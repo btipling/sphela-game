@@ -36,6 +36,18 @@ var sessionKeys = (function() {
     /**
      * Key for region for which info is requested.
      */
-    REQUESTED_REGION: 'requestedRegion'
+    REQUESTED_REGION: 'requestedRegion',
+    /**
+     * The key for num troops to attack with.
+     */
+    ATTACK_TROOPS: 'attackTroops',
+    /**
+     * The key for num troops to move.
+     */
+    MOVE_TROOPS: 'moveTroops',
+    /**
+     * The tab selection for attack vs move.
+     */
+    SELECTED_ATTACK_TAB: 'selectedAttackTab'
   };
 })();

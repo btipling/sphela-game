@@ -99,6 +99,21 @@
         return;
       }
       combat.attack(this.userId, fromRegion, toRegion, troops);
+    },
+    /**
+     * Move troops from one region to another region.
+     * @param {string} fromRegion
+     * @param {string} toRegion
+     * @param {number} troops
+     */
+    move: function(fromRegion, toRegion, troops) {
+     if (!this.userId) {
+       return;
+     }
+     if (!troops) {
+       return;
+     }
+     combat.move(this.userId, fromRegion, toRegion, troops);
     }
   });
 })();

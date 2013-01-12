@@ -19,7 +19,7 @@ function clearClientRound() {
       regions = round.regions;
     }
     _.each(dataStore.features, function(region, index) {
-      var userId;
+      var userId, owner;
       try {
         path = d3.select('#' + region.id);
       } catch(e) {
@@ -27,7 +27,11 @@ function clearClientRound() {
       }
       if (path) {
         if (regions && _.has(regions, region.id)) {
-          userId = _.last(regions[region.id].owner).userId;
+          owner = _.last(regions[region.id].owner);
+          if (!owner) {
+            return;
+          }
+          userId = owner.userId;
           if (userId && _.has(round.playerInfo, userId)) {
             path.style('fill', round.playerInfo[userId].color);
             return;

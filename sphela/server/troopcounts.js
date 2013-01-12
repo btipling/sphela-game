@@ -65,6 +65,10 @@ global = this;
       if (!_.has(roundRegions, vector)) {
         return;
       }
+      if (_.isEmpty(roundRegions[vector].owner)) {
+        // Happens when an empty region was attacked but attacker lost.
+        return;
+      }
       if (_.last(roundRegions[vector].owner).userId === userId) {
         numVectorsNotOwned -= 1;
         newTroops += 1;

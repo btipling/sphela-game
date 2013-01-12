@@ -127,7 +127,8 @@ combat = {};
    * @param {number} attackTroops
    */
   function attack(userId, fromRegion, toRegion, attackTroops) {
-    var round, availTroops, owner, regionData, username, user, toRegionObj;
+    var round, availTroops, owner, regionData, username, user, toRegionObj,
+        vectors;
     user = Meteor.users.findOne({_id: userId});
     if (!user) {
       return;
@@ -137,36 +138,39 @@ combat = {};
     if (!_.has(round.regions, fromRegion)) {
       return;
     }
-    // Validate user owns region.      
+    // Validate user owns region.
     if (!userOwnsRegion(userId, fromRegion, round)) {
-      return
+      return;
     }
     // Don't allow user to attack own region.
     if (userOwnsRegion(userId, toRegion, round)) {
-      return
+      return;
+    }
+    // Validate from and to regions are vectors.
+    if(regionStore[fromRegion].vectors.indexOf(toRegion) === -1) {
+      return;
     }
     // Validate user has enough troops in the region or use min amount.
     availTroops = getAvailTroops(round, fromRegion);
     attackTroops = availTroops < attackTroops ? availTroops : attackTroops;
-    round = currentRoundNumber();
     toRegionObj = regionStore[toRegion];
     // Remove attack troops from region.
-    setRegionTroopCount(round, fromRegion, availTroops - attackTroops);
+    setRegionTroopCount(round.round, fromRegion, availTroops - attackTroops);
     // Call attack.
-    outcome = attackRegion(userId, round, toRegion, attackTroops);
+    outcome = attackRegion(userId, round.round, toRegion, attackTroops);
     if (outcome) {
       addMessage([
           username,
           'has taken',
           toRegionObj.name + '.'
       ].join(' '), 'attack');
-      addPlayerRoundMessage(userId, round, [
+      addPlayerRoundMessage(userId, round.round, [
         'Your attack on',
         toRegionObj.name,
         'succeeded.'
         ].join(' '));
     } else {
-      addPlayerRoundMessage(userId, round, [
+      addPlayerRoundMessage(userId, round.round, [
         'Your attack on',
         toRegionObj.name,
         'failed.'
@@ -270,4 +274,46 @@ combat = {};
     results.attackerWin = attackerDamage > defenderDamage;
     return results;
   }
+
+  /**
+   * @param {string} userId
+   * @param {string} fromRegion
+   * @param {string} toRegion
+   * @param {number} moveTroops
+   */
+  function move(userId, fromRegion, toRegion, moveTroops) {
+    var vectors, round, regions, availTroops, existingTroops;
+    round = Rounds.findOne({round: currentRoundNumber()});
+    if (!_.has(round.regions, fromRegion)) {
+      return;
+    }
+    if (!_.has(round.regions, toRegion)) {
+      return;
+    }
+    if(regionStore[fromRegion].vectors.indexOf(toRegion) === -1) {
+      return;
+    }
+    if (!userOwnsRegion(userId, fromRegion, round)) {
+      return;
+    }
+    if (!userOwnsRegion(userId, toRegion, round)) {
+      return;
+    }
+    availTroops = getAvailTroops(round, fromRegion);
+    existingTroops = getAvailTroops(round, toRegion);
+    moveTroops = availTroops < moveTroops ? availTroops : moveTroops;
+    setRegionTroopCount(round.round, fromRegion, availTroops - moveTroops);
+    setRegionTroopCount(round.round, toRegion,  moveTroops + existingTroops);
+    fromRegionObj = regionStore[fromRegion];
+    toRegionObj = regionStore[toRegion];
+    addPlayerRoundMessage(userId, round.round, [
+      'You moved',
+      moveTroops,
+      'troops to',
+      toRegionObj.name,
+      'from',
+      fromRegionObj.name
+      ].join(' '), 'move');
+  }
+  combat.move = move;
 })();

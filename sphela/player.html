@@ -42,9 +42,22 @@
 </template>
 
 <template name="territoryWarScreen">
-  <div class="container">
-    {{> attackForm}}
-  </didv>
+ <div class="container">
+    <ul class="nav nav-tabs" id="war-tabs">
+      <li {{#if isAttacking}}class="active"{{/if}}><a
+        href="#attack-region">attack region</a></li>
+      <li {{#unless isAttacking}}class="active"{{/unless}}><a
+        href="#move-troops">move troops</a></li>
+    </ul>
+    <div class="tab-content row">
+      <div class="tab-pane {{#if isAttacking}}active{{/if}}" id="attack-region">
+        {{> attackForm}}
+      </div>
+      <div class="tab-pane {{#unless isAttacking}}active{{/unless}}" id="move-troops">
+        {{> moveForm}}
+      </div>
+    </div>
+  </div>
 </template>
 
 <template name="sourceSelection">
@@ -60,10 +73,21 @@
   </div>
 </template>
 
+<template name="moveTargetSelection">
+  <div class="target-selector-container war-selector">
+    <select class="target-selector"
+      {{#unless canSelectTarget }}disabled="disabled"{{/unless}}>
+      {{#each targets}}
+        <option value="{{this.id}}">{{this.name}}</option>
+      {{/each}}
+    </select>
+  </div>
+</template>
+
 <template name="targetSelection">
   <div class="target-selector-container war-selector">
     <select class="target-selector"
-      {{#unless canSelect }}disabled="disabled"{{/unless}}>
+      {{#unless canSelectTarget }}disabled="disabled"{{/unless}}>
       {{#each targets}}
         <option value="{{this.id}}">{{this.name}}</option>
       {{/each}}
@@ -94,6 +118,34 @@
     </div>
     <div>
       <input type="submit" class="btn" value="Attack!"/>
+    </div>
+  </form>
+</div>
+</template>
+
+<template name="moveForm">
+<div class="move-form-container">
+  <form class="move-form form span3">
+    <h3>Move troops</h3>
+    <div>
+      <label>Source: {{source}}</label>
+      {{> sourceSelection}}
+    </div>
+    <div>
+      <label>Destination: {{destination}}</label>
+      {{> moveTargetSelection}}
+    </div>
+    <div>
+    <label>Number of troops:
+      <br/>
+      <input type="text" class="move-num-input" value="{{troops}}" />
+    </label>
+    </div>
+    <div class="range-selector">
+      <input type="range" class="move-num-range"/>
+    </div>
+    <div>
+      <input type="submit" class="btn" value="Move"/>
     </div>
   </form>
 </div>
