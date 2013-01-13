@@ -520,7 +520,7 @@ if (Meteor.isClient) {
      * @return {string}
      */
     Template.region.owner = function() {
-      var round, region, userId;
+      var round, region, userId, owner;
       region = Session.get('requestedRegion');
       round = Rounds.findOne({round: clientCurrentRoundNumber()});
       if (!round || !region) {
@@ -529,7 +529,11 @@ if (Meteor.isClient) {
       if (!_.has(round.regions, region.id)) {
         return 'None';
       }
-      userId = _.last(round.regions[region.id].owner).userId;
+      owner = _.last(round.regions[region.id].owner);
+      if (!owner) {
+        return 'None';
+      }
+      userId = owner.userId;
       if (!userId) {
         return 'None';
       }

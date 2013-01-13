@@ -181,6 +181,12 @@
       <p>Total troop count:</p>
       <div class="count">
         {{totalTroops}}
+        {{#if upTrend}}
+          <span class="trend up-trend">▲</span>
+        {{/if}}
+        {{#if downTrend}}
+          <span class="trend down-trend">▼</span>
+        {{/if}}
       </div>
     </div>
   </div>

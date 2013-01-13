@@ -42,6 +42,53 @@
     }
 
     /**
+     * @return {boolean?}
+     */
+    function troopDownTrend() {
+      var last, penultimate, playerRound, userId, round, troops;
+      userId = Meteor.userId();
+      round = clientCurrentRoundNumber();
+      if (!userId) {
+        return null;
+      }
+      playerRound = PlayerRounds.findOne({userId: userId, round: round});
+      if (!playerRound) {
+        return null;
+      }
+      troops = playerRound.totalTroops;
+      if (!troops || _.isEmpty(troops) || troops.length < 2) {
+        return null;
+      }
+      last = _.last(troops).count;
+      penultimate = troops[troops.length-2].count;
+      return last < penultimate;
+    }
+
+    /**
+     * @return {boolean}
+     */
+    Template.playerCounts.upTrend = function () {
+      var result;
+      result = troopDownTrend();
+      if (_.isNull(result)) {
+        return false;
+      }
+      return !result;
+    }
+
+    /**
+     * @return {boolean}
+     */
+    Template.playerCounts.downTrend = function () {
+      var result;
+      result = troopDownTrend();
+      if (_.isNull(result)) {
+        return false;
+      }
+      return result;
+    }
+
+    /**
      * @return {number}
      */
     function getFloatingTroopsCount() {
