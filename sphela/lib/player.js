@@ -44,7 +44,22 @@
     /**
      * @return {boolean?}
      */
+    function troopRegionTrend() {
+      return downTrend('regionCount');
+    }
+
+    /**
+     * @return {boolean?}
+     */
     function troopDownTrend() {
+      return downTrend('totalTroops');
+    }
+
+    /**
+     * @param {string} fieldName
+     * @return {boolean?}
+     */
+    function downTrend(fieldName) {
       var last, penultimate, playerRound, userId, round, troops;
       userId = Meteor.userId();
       round = clientCurrentRoundNumber();
@@ -55,7 +70,7 @@
       if (!playerRound) {
         return null;
       }
-      troops = playerRound.totalTroops;
+      troops = playerRound[fieldName];
       if (!troops || _.isEmpty(troops) || troops.length < 2) {
         return null;
       }
@@ -67,7 +82,31 @@
     /**
      * @return {boolean}
      */
-    Template.playerCounts.upTrend = function () {
+    Template.playerCounts.upRegionsTrend = function () {
+      var result;
+      result = troopRegionTrend();
+      if (_.isNull(result)) {
+        return false;
+      }
+      return !result;
+    }
+
+    /**
+     * @return {boolean}
+     */
+    Template.playerCounts.downRegionsTrend = function () {
+      var result;
+      result = troopRegionTrend();
+      if (_.isNull(result)) {
+        return false;
+      }
+      return result;
+    }
+
+    /**
+     * @return {boolean}
+     */
+    Template.playerCounts.upTroopsTrend = function () {
       var result;
       result = troopDownTrend();
       if (_.isNull(result)) {
@@ -79,7 +118,7 @@
     /**
      * @return {boolean}
      */
-    Template.playerCounts.downTrend = function () {
+    Template.playerCounts.downTroopsTrend = function () {
       var result;
       result = troopDownTrend();
       if (_.isNull(result)) {
@@ -275,7 +314,7 @@
     function targetSelection(filterFunc) {
       var source, vectors, selected;
       vectors = getVectors(filterFunc);
-      selected = getSelected(vectors);
+      selected = getSelected(vectors, filterFunc);
       return _.map(vectors, function(vector) {
         return {
           selected: vector === selected,
@@ -286,20 +325,24 @@
     }
 
     /**
+     * Filter out regions that can't be attacked because
+     * they are already owned by the player.
      * @param {Object} playerRound
      * @param {string} region
      * @return {boolean}
      */
-    function filterNonTargetsOut(playerRound, region) {
-        return _.indexOf(playerRound.regions, region) === -1;
+    function attackRegionFilter(playerRound, region) {
+      return _.indexOf(playerRound.regions, region) === -1;
     }
 
     /**
+     * Filter out regions that can't be moved to because
+     * the player doesn't own them.
      * @param {Object} playerRound
      * @param {string} region
      * @return {boolean}
      */
-    function filterOutTargets(playerRound, region) {
+    function moveRegionFilter(playerRound, region) {
         return _.indexOf(playerRound.regions, region) !== -1;
     }
 
@@ -307,7 +350,7 @@
      * @return {Array.<Object>}
      */
     Template.targetSelection.targets = _.bind(targetSelection, null,
-        filterNonTargetsOut);
+        attackRegionFilter);
 
     /**
      * @param {Function=} opt_filterFunc
@@ -348,7 +391,7 @@
       if (_.isFunction(opt_filterFunc)) {
         filterFunc = opt_filterFunc;
       } else {
-        filterFunc = filterNonTargetsOut;
+        filterFunc = attackRegionFilter;
       }
       target = Session.get('selectedTarget');
       filtered = _.filter(vectors, _.bind(filterFunc, null, getPlayerRound()));
@@ -398,9 +441,9 @@
       vectors = getVectors();
       attacking = isAttacking();
       if (attacking) {
-        selected = getSelected(vectors, filterNonTargetsOut);
+        selected = getSelected(vectors, attackRegionFilter);
       } else {
-        selected = getSelected(vectors, filterOutTargets);
+        selected = getSelected(vectors, moveRegionFilter);
       }
       setSelectedTarget(selected);
       Session.set(attacking ? 'attackTroops' : 'moveTroops',
@@ -592,7 +635,7 @@
      * @return {Array}
      */
     Template.moveTargetSelection.targets = _.bind(targetSelection, null,
-      filterOutTargets);
+      moveRegionFilter);
 
     /**
      * @return {Boolean}
@@ -600,6 +643,10 @@
     Template.moveTargetSelection.canSelectTarget = function () {
       return canSelectTarget();
     };
+
+    Template.moveTargetSelection.events({
+      'change .target-selector': handleTargetSelection
+    });
 
     /**
      * @return {number}

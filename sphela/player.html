@@ -78,7 +78,9 @@
     <select class="target-selector"
       {{#unless canSelectTarget }}disabled="disabled"{{/unless}}>
       {{#each targets}}
-        <option value="{{this.id}}">{{this.name}}</option>
+        <option value="{{this.id}}"
+          {{#if this.selected}}selected="selected"{{/if}}
+        >{{this.name}}</option>
       {{/each}}
     </select>
   </div>
@@ -89,7 +91,9 @@
     <select class="target-selector"
       {{#unless canSelectTarget }}disabled="disabled"{{/unless}}>
       {{#each targets}}
-        <option value="{{this.id}}">{{this.name}}</option>
+        <option value="{{this.id}}"
+          {{#if this.selected}}selected="selected"{{/if}}
+        >{{this.name}}</option>
       {{/each}}
     </select>
   </div>
@@ -175,16 +179,22 @@
       <p>Your territories:</p>
       <div class="count">
         {{regions}}
+        {{#if upRegionsTrend}}
+          <span class="trend up-trend">▲</span>
+        {{/if}}
+        {{#if downRegionsTrend}}
+          <span class="trend down-trend">▼</span>
+        {{/if}}
       </div>
     </div>
     <div class="player-count span2">
       <p>Total troop count:</p>
       <div class="count">
         {{totalTroops}}
-        {{#if upTrend}}
+        {{#if upTroopsTrend}}
           <span class="trend up-trend">▲</span>
         {{/if}}
-        {{#if downTrend}}
+        {{#if downTroopsTrend}}
           <span class="trend down-trend">▼</span>
         {{/if}}
       </div>
