@@ -19,7 +19,7 @@ var global = this;
       endGame();
       return;
     }
-    updateTroopCounts();
+    updateCredits();
   }
 
   function endGame() {

@@ -189,8 +189,9 @@ function setRegionOwner(userId, round, region) {
  * @param {number} round
  * @param {string} region
  * @param {number} troopCount
+ * @param {boolean=} opt_silent
  */
-function setRegionTroopCount(round, region, troopCount) {
+function setRegionTroopCount(round, region, troopCount, opt_silent) {
   var regionObj, owner;
   regionObj = getRegion(round, region);
   regionObj.troopCount.push({
@@ -201,7 +202,7 @@ function setRegionTroopCount(round, region, troopCount) {
   roundObj.regions[region] = regionObj;
   Rounds.update({_id: roundObj._id}, roundObj, global.NOOP);
   owner = regionObj.owner;
-  if (owner && !_.isEmpty(owner)) {
+  if (!opt_silent && owner && !_.isEmpty(owner)) {
     updatePlayerTotalTroops(_.last(owner).userId, roundObj);
   }
 }

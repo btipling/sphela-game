@@ -155,7 +155,8 @@ combat = {};
     attackTroops = availTroops < attackTroops ? availTroops : attackTroops;
     toRegionObj = regionStore[toRegion];
     // Remove attack troops from region.
-    setRegionTroopCount(round.round, fromRegion, availTroops - attackTroops);
+    setRegionTroopCount(round.round, fromRegion, availTroops - attackTroops,
+      true);
     // Call attack.
     outcome = attackRegion(userId, round.round, toRegion, attackTroops);
     if (outcome) {
@@ -219,10 +220,11 @@ combat = {};
           ].join(' '), 'attack-failure');
       }
     }
-    setRegionTroopCount(round, region, outcome.troopsLeft);
     if (outcome.attackerWin) {
       setRegionOwner(attackerId, round, region);
     }
+    setRegionTroopCount(round, region, outcome.troopsLeft, true);
+    updatePlayerTotalTroops(attackerId, roundObj);
     return outcome.attackerWin;
   }
 
@@ -316,4 +318,43 @@ combat = {};
       ].join(' '), 'move');
   }
   combat.move = move;
+  /**
+   * @param {string} userId
+   * @param {string} target
+   * @param {number} buyTroops
+   */
+  function buy(userId, target, buyTroops) {
+    var vectors, round, regions, availCredits, existingTroops, playerRound,
+      roundNumber, left, regionObj;
+    regionObj = regionStore[target];
+    if (!regionObj) {
+      return;
+    }
+    roundNumber = currentRoundNumber();
+    round = Rounds.findOne({round: roundNumber});
+    if (!_.has(round.regions, target)) {
+      return;
+    }
+    if (!userOwnsRegion(userId, target, round)) {
+      return;
+    }
+    playerRound = PlayerRounds.findOne({userId: userId, round: roundNumber});
+    if (!playerRound) {
+      return;
+    }
+    availCredits = _.last(playerRound.credits).count;
+    existingTroops = getAvailTroops(round, target);
+    buyTroops = availCredits < buyTroops ? availCredits : buyTroops;
+    left = availCredits - buyTroops;
+    playerRound.credits.push({count: left, when: new Date().getTime()});
+    PlayerRounds.update({_id: playerRound._id}, playerRound, global.NOOP);
+    setRegionTroopCount(round.round, target,  buyTroops + existingTroops);
+    addPlayerRoundMessage(userId, round.round, [
+      'You bought',
+      buyTroops,
+      'for',
+      regionObj.name + '.',
+      ].join(' '), 'move');
+  }
+  combat.buy = buy;
 })();

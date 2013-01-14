@@ -6,15 +6,36 @@
     });
 
     /**
-     * @return {boolean}
+     * @return {string}
      */
-    function isAttacking() {
+    function getTabState() {
       var selectedTab;
       selectedTab = Session.get('selectedAttackTab');
       if (!selectedTab) {
-        return true;
+        return 'attack-region';
       }
-      return  selectedTab === 'attack-region';
+      return selectedTab;
+    }
+
+    /**
+     * @return {boolean}
+     */
+    function isAttacking() {
+      return  getTabState() === 'attack-region';
+    }
+
+    /**
+     * @return {boolean}
+     */
+    function isMoving() {
+      return  getTabState() === 'move-troops';
+    }
+
+    /**
+     * @return {boolean}
+     */
+    function isBuying() {
+      return  getTabState() === 'buy-troops';
     }
 
     /**
@@ -29,19 +50,6 @@
     }
 
     /**
-     * return {number}
-     */
-    Template.playerCounts.regions = function() {
-      var userId, regions;
-      userId = Meteor.userId();
-      if (!userId) {
-        return 0;
-      }
-      regions = playerRegions(userId, clientCurrentRoundNumber());
-      return regions ? regions.length || 0 : 0;
-    }
-
-    /**
      * @return {boolean?}
      */
     function troopRegionTrend() {
@@ -53,6 +61,13 @@
      */
     function troopDownTrend() {
       return downTrend('totalTroops');
+    }
+
+    /**
+     * @return {boolean?}
+     */
+    function creditDownTrend() {
+      return downTrend('credits');
     }
 
     /**
@@ -128,6 +143,30 @@
     }
 
     /**
+     * @return {boolean}
+     */
+    Template.playerCounts.upCreditTrend = function () {
+      var result;
+      result = creditDownTrend();
+      if (_.isNull(result)) {
+        return false;
+      }
+      return !result;
+    }
+
+    /**
+     * @return {boolean}
+     */
+    Template.playerCounts.downCreditTrend = function () {
+      var result;
+      result = creditDownTrend();
+      if (_.isNull(result)) {
+        return false;
+      }
+      return result;
+    }
+
+    /**
      * @return {number}
      */
     function getFloatingTroopsCount() {
@@ -135,9 +174,10 @@
     }
 
     /**
+     * @param {string} fieldName
      * @return {number}
      */
-    Template.playerCounts.totalTroops = function() {
+    function getCount(fieldName) {
       var playerRound, userId;
       userId = Meteor.userId();
       if (!userId) {
@@ -148,7 +188,28 @@
       if (!playerRound) {
         return 0;
       }
-      return _.last(playerRound.totalTroops).count;
+      return _.last(playerRound[fieldName]).count;
+    }
+
+    /**
+     * return {number}
+     */
+    Template.playerCounts.regions = function() {
+      return getCount('regionCount');
+    }
+
+    /**
+     * @return {number}
+     */
+    Template.playerCounts.totalTroops = function() {
+      return getCount('totalTroops');
+    };
+
+    /**
+     * @return {number}
+     */
+    Template.playerCounts.credits = function() {
+      return getCount('credits');
     };
 
     /**
@@ -177,9 +238,14 @@
       updatePlayerChart('.troops-chart', 'totalTroops');
     }
 
+    function updateCreditChart() {
+      updatePlayerChart('.credits-chart', 'credits');
+    }
+
     Template.playerCounts.rendered = function() {
       updateRegionChart();
       updateTroopChart();
+      updateCreditChart();
     };
 
     /**
@@ -327,6 +393,9 @@
       troopCount = round.regions[selectedRegion.id].troopCount;
       if (_.isEmpty(troopCount)) {
         return false;
+      }
+      if (isBuying()) {
+        return true;
       }
       return _.last(troopCount).count > 0;
     }
@@ -560,11 +629,18 @@
      * @param {Object} event
      */
     function handleTabSelection(event) {
-      var target, tab;
+      var target, tab, href;
       event.preventDefault();
       target = event.target;
-      tab = _.last(target.href.split('#'));
+      href = target.href;
+      if (!href) {
+        return;
+      }
+      tab = _.last(href.split('#'));
       Session.set('selectedAttackTab', tab);
+      if (isBuying()) {
+        updatePossibleTroops();
+      }
     }
 
     /**
@@ -572,6 +648,20 @@
      */
     Template.territoryWarScreen.isAttacking = function() {
       return isAttacking();
+    }
+
+    /**
+     * @return {boolean}
+     */
+    Template.territoryWarScreen.isMoving = function() {
+      return isMoving();
+    }
+
+    /**
+     * @return {boolean}
+     */
+    Template.territoryWarScreen.isBuying = function() {
+      return isBuying();
     }
 
     Template.territoryWarScreen.preserve([
@@ -687,6 +777,22 @@
     }
 
     /**
+     * @return {number}
+     */
+    updatePossibleTroops = function() {
+      var playerRound, num;
+      playerRound = PlayerRounds.findOne({userId: userId,
+        round: clientCurrentRoundNumber()});
+      if (!playerRound) {
+        num = 0;
+      } else {
+        num = _.last(playerRound.credits).count || 0;
+      }
+      $('.buy-num-input').val(num);
+    }
+
+
+    /**
      * @param {Object} event
      */
     function handleMoveTroopInput(event) {
@@ -723,6 +829,33 @@
     Template.moveForm.preserve([
       '.move-num-range'
     ]);
+
+    /**
+     * @param {Object} event
+     */
+    function handleBuy(event) {
+      var count, target;
+      event.preventDefault();
+      target = Session.get('selectedRegion');
+      count = +$('.buy-num-input').val();
+      if (target && count) {
+        Meteor.call('buy', target.id, count);
+      }
+    }
+
+    Template.buyForm.events({
+      'submit .buy-form': handleBuy,
+    });
+
+    Template.buyForm.preserve([
+      '.buy-num-input'
+    ]);
+
+    Template.buyForm.rendered = function() {
+      if (!$('buy-num-input').val()) {
+        updatePossibleTroops();
+      }
+    };
 
     Meteor.autosubscribe(function() {
       var game;

@@ -45,16 +45,21 @@
  <div class="container">
     <ul class="nav nav-tabs" id="war-tabs">
       <li {{#if isAttacking}}class="active"{{/if}}><a
-        href="#attack-region">attack region</a></li>
-      <li {{#unless isAttacking}}class="active"{{/unless}}><a
-        href="#move-troops">move troops</a></li>
+        href="#attack-region">attack</a></li>
+      <li {{#if isMoving}}class="active"{{/if}}><a
+        href="#move-troops">move</a></li>
+      <li {{#if isBuying}}class="active"{{/if}}><a
+        href="#buy-troops">buy</a></li>
     </ul>
     <div class="tab-content row">
       <div class="tab-pane {{#if isAttacking}}active{{/if}}" id="attack-region">
         {{> attackForm}}
       </div>
-      <div class="tab-pane {{#unless isAttacking}}active{{/unless}}" id="move-troops">
+      <div class="tab-pane {{#if isMoving}}active{{/if}}" id="move-troops">
         {{> moveForm}}
+      </div>
+      <div class="tab-pane {{#if isBuying}}active{{/if}}" id="buy-troops">
+        {{> buyForm}}
       </div>
     </div>
   </div>
@@ -153,6 +158,26 @@
 </div>
 </template>
 
+<template name="buyForm">
+<div class="buy-form-container">
+  <form class="buy-form form span3">
+    <div>
+      <label>Target: {{source}}</label>
+      {{> sourceSelection}}
+    </div>
+    <div>
+    <label>Number of troops:
+      <br/>
+      <input type="text" class="buy-num-input" value="" />
+    </label>
+    </div>
+    <div>
+      <input type="submit" class="btn" value="Buy"/>
+    </div>
+  </form>
+</div>
+</template>
+
 <template name="dropWarScreen">
   <div class="drop-war-screen span4">
     {{#if hasTroops}}
@@ -198,6 +223,21 @@
             <span class="trend up-trend">▲</span>
           {{/if}}
           {{#if downTroopsTrend}}
+            <span class="trend down-trend">▼</span>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+    <div class="count-row">
+      <div class="player-count span4">
+        <p>Credits:</p>
+        <div class="count">
+          <svg class="credits-chart small-chart"></svg>
+          {{credits}}
+          {{#if upCreditTrend}}
+            <span class="trend up-trend">▲</span>
+          {{/if}}
+          {{#if downCreditTrend}}
             <span class="trend down-trend">▼</span>
           {{/if}}
         </div>

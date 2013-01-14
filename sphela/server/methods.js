@@ -114,6 +114,20 @@
        return;
      }
      combat.move(this.userId, fromRegion, toRegion, troops);
+    },
+    /**
+     * Buy troops for a region.
+     * @param {string} target
+     * @param {number} troops
+     */
+    buy: function(target, troops) {
+     if (!this.userId) {
+       return;
+     }
+     if (!troops) {
+       return;
+     }
+     combat.buy(this.userId, target, troops);
     }
   });
 })();

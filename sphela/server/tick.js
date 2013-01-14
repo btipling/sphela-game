@@ -4,13 +4,13 @@ global = this;
  * @fileOverview The logic that updates the troop counts each tick.
  */
 (function () {
-  var MIN_PLAYER_TROOPS,
+  var MIN_CREDITS,
     REGION_TROOP_BONUS;
   /**
    * @type {number}
    * @const
    */
-  MIN_PLAYER_TROOPS = 5;
+  MIN_CREDITS = 5;
   /**
    * The minimum number of troops received for owning a region.
    * @type {number}
@@ -25,9 +25,8 @@ global = this;
    * @return {boolean} Returns true if user has no regions.
    */
   function updateNoRegions(playerRound) {
-    if (_.last(playerRound.regionCount).count === 0 &&
-        _.last(playerRound.floatingTroops).count < MIN_PLAYER_TROOPS) {
-      playerRound.floatingTroops.push({count: MIN_PLAYER_TROOPS,
+    if (_.last(playerRound.regionCount).count === 0) {
+      playerRound.credits.push({count: MIN_CREDITS,
         when: new Date().getTime()});
       PlayerRounds.update({_id: playerRound._id}, playerRound, global.NOOP);
       return true;
@@ -39,26 +38,29 @@ global = this;
    * @param {Object} round
    * @param {Object} playerRound
    */
-  function updatePlayerTroops(round, playerRound) {
+  function updatePlayerCredits(round, playerRound) {
     if (updateNoRegions(playerRound)) {
       return true;
     }
-    _.each(playerRound.regions, _.bind(updateRegionTroops, null, round,
-      playerRound));
+    credits = _.reduce(playerRound.regions, _.bind(updateRegionCredits,
+      null, round, playerRound), _.last(playerRound.credits).count || 0);
+    playerRound.credits.push({count: credits, when: new Date().getTime()});
+    PlayerRounds.update({_id: playerRound._id}, playerRound, global.NOOP);
   }
 
   /**
    * @param {Object} round
    * @param {Object} playerRound
    * @param {string} region
+   * @param {number} credits
    */
-  function updateRegionTroops(round, playerRound, region) {
-    var vectors, userId, newTroops, numVectorsNotOwned, roundRegions,
+  function updateRegionCredits(round, playerRound, credits, region) {
+    var vectors, userId, newCredits, numVectorsNotOwned, roundRegions,
        existingTroops;
     userId = playerRound.userId;
     // Vectors are adjacent or otherwise attackable regions.
     vectors = regionStore[region].vectors;
-    newTroops = REGION_TROOP_BONUS;
+    newCredits = REGION_TROOP_BONUS;
     roundRegions = round.regions;
     numVectorsNotOwned = vectors.length;
     _.each(vectors, function(vector) {
@@ -71,33 +73,25 @@ global = this;
       }
       if (_.last(roundRegions[vector].owner).userId === userId) {
         numVectorsNotOwned -= 1;
-        newTroops += 1;
+        newCredits += 1;
       }
     });
     if (numVectorsNotOwned < 1) {
       // If all vectors are owned, bonus is an extra troop for each vector.
-      newTroops += vectors.length;
+      newCredits += vectors.length;
     }
-    existingTroops = _.last(roundRegions[region].troopCount).count;
-    roundRegions[region].troopCount.push({
-      count: existingTroops + newTroops,
-      when: new Date().getTime()
-    });
+    return newCredits + credits;
   }
 
-  function updateTroopCounts() {
+  function updateCredits() {
     var playerRounds, round;
-    console.log('updating troop counts!');
     round = currentRound();
     if (!round) {
       return;
     }
     playerRounds = PlayerRounds.find({round:round.round});
-    playerRounds.forEach(_.bind(updatePlayerTroops, null, round));
+    playerRounds.forEach(_.bind(updatePlayerCredits, null, round));
     Rounds.update({_id: round._id}, round, global.NOOP);
-    _.each(round.playerInfo, function(user, userId) {
-      updatePlayerTotalTroops(userId, round);
-    });
   }
-  global.updateTroopCounts = updateTroopCounts;
+  global.updateCredits = updateCredits;
 })();
