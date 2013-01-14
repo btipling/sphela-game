@@ -51,7 +51,63 @@ var global = this;
       game = Games.findOne();
       return (game ? game.tick : 0).toString() + '/' + global.TICKS_IN_GAME;
     };
+
+    Template.topStats.topStats = function() {
+      return {topRegions: 'works'};
+    };
+
+    /**
+     * @return {Array}
+     */
+    Template.topStats.topPlayerRegions = function() {
+      var topStats, topPlayerRegions, res;
+      topStats = TopStats.findOne({round: clientCurrentRoundNumber()});
+      if (!topStats) {
+        return [];
+      }
+      return topStats.topPlayerRegions || [];
+    };
+
+    /**
+     * @return {Array}
+     */
+    Template.topStats.topPlayerTroops = function() {
+      var topStats, topPlayerRegions, res;
+      topStats = TopStats.findOne({round: clientCurrentRoundNumber()});
+      if (!topStats) {
+        return [];
+      }
+      return topStats.topPlayerTroops || [];
+    };
+
+    /**
+     * @return {Array}
+     */
+    Template.topStats.topPlayerCredits = function() {
+      var topStats, topPlayerRegions, res;
+      topStats = TopStats.findOne({round: clientCurrentRoundNumber()});
+      if (!topStats) {
+        return [];
+      }
+      return topStats.topPlayerCredits || [];
+    };
+
+    /**
+     * @return {Array}
+     */
+    Template.topStats.topRegionTroops = function() {
+      var topStats, topPlayerRegions, res;
+      topStats = TopStats.findOne({round: clientCurrentRoundNumber()});
+      if (!topStats) {
+        return [];
+      }
+      return topStats.topRegionTroops || [];
+    };
+
+
+
     Meteor.subscribe('tick');
     Meteor.subscribe('round');
+    Meteor.subscribe('topstats');
   }
 })();

@@ -29,6 +29,28 @@ Meteor.publish('tick', function() {
 });
 
 /**
+ * Publish top stats.
+ */
+Meteor.publish('topstats', function() {
+  var handle, self;
+  handle = TopStats.find({}).observe({
+    changed: _.bind(function(t) {
+      this.set('topstats', t._id, t);
+      this.flush();
+    }, this),
+    added: _.bind(function(t) {
+      this.set('topstats', t._id, t);
+      this.flush();
+    }, this)
+  });
+  this.complete();
+  this.flush();
+  this.onStop(function() {
+    handle.stop();
+  });
+});
+
+/**
  * Publish round updates.
  */
 Meteor.publish('round', function() {

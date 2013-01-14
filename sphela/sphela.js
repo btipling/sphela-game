@@ -7,7 +7,7 @@ var global = this;
  * @type {number}
  * @const
  */
-global.TICK_INTERVAL = 10000;
+global.TICK_INTERVAL = 60000;
 
 /**
  * @type {number}

@@ -20,6 +20,7 @@ var global = this;
       return;
     }
     updateCredits();
+    updateTopStats();
   }
 
   function endGame() {

@@ -347,6 +347,7 @@ combat = {};
     buyTroops = availCredits < buyTroops ? availCredits : buyTroops;
     left = availCredits - buyTroops;
     playerRound.credits.push({count: left, when: new Date().getTime()});
+    updatePlayerRoundCredits(userId, left, roundNumber);
     PlayerRounds.update({_id: playerRound._id}, playerRound, global.NOOP);
     setRegionTroopCount(round.round, target,  buyTroops + existingTroops);
     addPlayerRoundMessage(userId, round.round, [

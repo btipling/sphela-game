@@ -109,11 +109,12 @@ function startRound() {
       numPlayers: [{count: 0, when: new Date().getTime()}]
     });
     addMessage('New round ' + currentRound + ' started!');
+    createTopStats(currentRound);
   }
 }
 
 /**
- * @return {Round}
+ * @return {Rounds}
  */
 function currentRound() {
   var round;
@@ -137,6 +138,8 @@ function addPlayerToRound(userId, name, color) {
   });
   round.playerInfo[userId] = {
     regions: [],
+    totalTroops: 0,
+    credits: 0,
     name: name,
     color: color
   };
@@ -362,7 +365,7 @@ function addPlayerRoundMessage(userId, round, message, opt_type) {
  * @param {number|Object} round
  */
 function updatePlayerTotalTroops(userId, round) {
-  var round, total, playerRound;
+  var round, total, playerRound, playerInfo;
   total =  0;
   if (!userId) {
     return;
@@ -373,7 +376,8 @@ function updatePlayerTotalTroops(userId, round) {
   if (!_.has(round.playerInfo, userId)) {
     return;
   }
-  _.each(round.playerInfo[userId].regions, function(region) {
+  playerInfo = round.playerInfo[userId];
+  _.each(playerInfo.regions, function(region) {
     if (_.has(round.regions, region)) {
       total += _.last(round.regions[region].troopCount).count;
     }
@@ -382,6 +386,8 @@ function updatePlayerTotalTroops(userId, round) {
   total += _.last(playerRound.floatingTroops).count;
   playerRound.totalTroops.push({count: total, when: new Date().getTime()});
   PlayerRounds.update({_id: playerRound._id}, playerRound, global.NOOP);
+  playerInfo.totalTroops = total;
+  Rounds.update({_id: round._id}, round, global.NOOP);
 }
 
 /**
@@ -481,5 +487,48 @@ function playerFloatingTroops(userId, round) {
     return 0;
   }
   return _.last(playerRound.floatingTroops).count;
+}
+
+/**
+ * @param {string} userId
+ * @param {number} credits
+ * @param {number} roundNumber
+ */
+function updatePlayerRoundCredits(userId, credits, roundNumber) {
+  var round;
+  round = Rounds.findOne({round: roundNumber});
+  if (!round) {
+    return;
+  }
+  if (!_.has(round.playerInfo, userId)) {
+    return;
+  }
+  round.playerInfo[userId].credits = credits;
+  Rounds.update({_id: round._id}, round);
+}
+
+/**
+ * TopStats stores top stats for the round.
+ * is updated every tick. Previous rounds serve
+ * historical information needs.
+ * @type {Meteor.Collection}
+ */
+TopStats = new Meteor.Collection('topstats');
+
+/**
+ * @param {number} round
+ */
+function createTopStats(round) {
+  var topStats;
+  topStats = TopStats.findOne({round: round});
+  if (!topStats) {
+    TopStats.insert({
+      round: round,
+      topPlayerTroops: [],
+      topPlayerCredits: [],
+      topPlayerRegions: [],
+      topRegionTroops: []
+    }, global.NOOP);
+  }
 }
 
