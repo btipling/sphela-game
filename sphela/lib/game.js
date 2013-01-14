@@ -5,6 +5,9 @@ var global = this;
 (function() {
   if (Meteor.isClient) {
     var nextTick;
+    $(function () {
+      Session.set('selectedStat', 'top-player-regions');
+    });
 
     /**
      * Tracks the number of seconds until next tick;
@@ -101,8 +104,55 @@ var global = this;
       if (!topStats) {
         return [];
       }
+      console.log('topStats.topRegionTroops', topStats.topRegionTroops);
       return topStats.topRegionTroops || [];
     };
+
+    /**
+     * @param {Object} event
+     */
+    function handleTabSelection(event) {
+      var target, tab, href;
+      event.preventDefault();
+      target = event.target;
+      href = target.href;
+      if (!href) {
+        return;
+      }
+      tab = _.last(href.split('#'));
+      Session.set('selectedStat', tab);
+    }
+    Template.topStats.events({
+      'click .nav-tabs li': handleTabSelection
+    });
+
+    /**
+     * @return {boolean}
+     */
+    Template.topStats.isTopPlayerRegions = function() {
+      return Session.get('selectedStat') === 'top-player-regions';
+    }
+
+    /**
+     * @return {boolean}
+     */
+    Template.topStats.isTopPlayerTroops = function() {
+      return Session.get('selectedStat') === 'top-player-troops';
+    }
+
+    /**
+     * @return {boolean}
+     */
+    Template.topStats.isTopPlayerCredits = function() {
+      return Session.get('selectedStat') === 'top-player-credits';
+    }
+
+    /**
+     * @return {boolean}
+     */
+    Template.topStats.isTopRegionTroops = function() {
+      return Session.get('selectedStat') === 'top-region-troops';
+    }
 
 
 

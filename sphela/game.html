@@ -40,13 +40,13 @@
   <div class="top-stats">
     <ul class="nav nav-tabs" id="stat-tabs">
       <li {{#if isTopPlayerRegions}}class="active"{{/if}}><a
-        href="#attack-region">regions</a></li>
+        href="#top-player-regions">regions</a></li>
       <li {{#if isTopPlayerTroops}}class="active"{{/if}}><a
-        href="#move-troops">troops</a></li>
+        href="#top-player-troops">troops</a></li>
       <li {{#if isTopPlayerCredits}}class="active"{{/if}}><a
-        href="#buy-troops">credits</a></li>
+        href="#top-player-credits">credits</a></li>
       <li {{#if isTopRegionTroops}}class="active"{{/if}}><a
-        href="#buy-troops">region troops</a></li>
+        href="#top-region-troops">region troops</a></li>
     </ul>
     <div class="tab-content">
       <div class="tab-pane {{#if isTopPlayerRegions}}active{{/if}}" id="attack-region">
@@ -59,29 +59,52 @@
         {{>topTable topPlayerCredits}}
       </div>
       <div class="tab-pane {{#if isTopRegionTroops}}active{{/if}}" id="attack-region">
-        {{>topTable topRegionTroops}}
+        {{>topRegion topRegionTroops}}
       </div>
     </div>
   </div>
 </template>
 
 <template name="topTable">
-  <div class="top-regions">
-    <table class="table">
-      <thead>
-        <tr class="table-row">
-          <th class="span2">Name</th>
-          <th class="span2">Count</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each this}}
-        <tr>
-          <td>{{name}}</td>
-          <td>{{count}}</td>
-        </tr>
-        {{/each}}
-      </tbody>
-    </table>
-  </div>
+  <table class="table">
+    <thead>
+      <tr class="table-row">
+        <th class="span1">&nbsp;</th>
+        <th class="span2">Name</th>
+        <th class="span2">Count</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each this}}
+      <tr>
+        <td class="color-column"><span class="stat-player-color" style="background-color: {{color}};"></span></td>
+        <td>{{name}}</td>
+        <td>{{count}}</td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</template>
+
+<template name="topRegion">
+  <table class="table">
+    <thead>
+      <tr class="table-row">
+        <th class="span1">&nbsp;</th>
+        <th class="span2">Regions</th>
+        <th class="span2">Owner</th>
+        <th class="span2">Troops</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each this}}
+      <tr>
+        <td class="color-column"><span class="stat-player-color" style="background-color: {{color}};"></span></td>
+        <td>{{regionName}}</td>
+        <td>{{playerName}}</td>
+        <td>{{troopCount}}</td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
 </template>
