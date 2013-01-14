@@ -10,7 +10,7 @@
     {{/if}}
     {{> playerMessages}}
   {{else}}
-  <div class="span2">
+  <div class="span2 join-container">
     <button class="btn join-round">Join Round {{round}}</button>
   </div>
   {{/if}}
@@ -102,7 +102,6 @@
 <template name="attackForm">
 <div class="attack-form-container">
   <form class="attack-form form span3">
-    <h3>Attack a region</h3>
     <div>
       <label>Source: {{source}}</label>
       {{> sourceSelection}}
@@ -130,7 +129,6 @@
 <template name="moveForm">
 <div class="move-form-container">
   <form class="move-form form span3">
-    <h3>Move troops</h3>
     <div>
       <label>Source: {{source}}</label>
       {{> sourceSelection}}
@@ -175,28 +173,34 @@
 
 <template name="playerCounts">
   <div class="container player-counts">
-    <div class="player-count span2">
-      <p>Your territories:</p>
-      <div class="count">
-        {{regions}}
-        {{#if upRegionsTrend}}
-          <span class="trend up-trend">▲</span>
-        {{/if}}
-        {{#if downRegionsTrend}}
-          <span class="trend down-trend">▼</span>
-        {{/if}}
+    <div class="count-row">
+      <div class="player-count span4">
+        <p>Your territories:</p>
+        <div class="count">
+          <svg class="regions-chart small-chart"></svg>
+          {{regions}}
+          {{#if upRegionsTrend}}
+            <span class="trend up-trend">▲</span>
+          {{/if}}
+          {{#if downRegionsTrend}}
+            <span class="trend down-trend">▼</span>
+          {{/if}}
+        </div>
       </div>
     </div>
-    <div class="player-count span2">
-      <p>Total troop count:</p>
-      <div class="count">
-        {{totalTroops}}
-        {{#if upTroopsTrend}}
-          <span class="trend up-trend">▲</span>
-        {{/if}}
-        {{#if downTroopsTrend}}
-          <span class="trend down-trend">▼</span>
-        {{/if}}
+    <div class="count-row">
+      <div class="player-count span4">
+        <p>Total troop count:</p>
+        <div class="count">
+          <svg class="troops-chart small-chart"></svg>
+          {{totalTroops}}
+          {{#if upTroopsTrend}}
+            <span class="trend up-trend">▲</span>
+          {{/if}}
+          {{#if downTroopsTrend}}
+            <span class="trend down-trend">▼</span>
+          {{/if}}
+        </div>
       </div>
     </div>
   </div>

@@ -152,6 +152,37 @@
     };
 
     /**
+     * @param {string} selector
+     * @param {string} fieldName
+     */
+    function updatePlayerChart(selector, fieldName) {
+      var svg, playerRound;
+      svg = $(selector).get(0);
+      if (!svg) {
+        return;
+      }
+      playerRound = PlayerRounds.findOne({userId: userId,
+        round: clientCurrentRoundNumber()});
+      if (!playerRound) {
+        return;
+      }
+      chart.drawLine(svg, playerRound[fieldName]);
+    }
+
+    function updateRegionChart() {
+      updatePlayerChart('.regions-chart', 'regionCount');
+    }
+
+    function updateTroopChart() {
+      updatePlayerChart('.troops-chart', 'totalTroops');
+    }
+
+    Template.playerCounts.rendered = function() {
+      updateRegionChart();
+      updateTroopChart();
+    };
+
+    /**
      * @return {boolean}
      */
     Template.playerStatus.isPlaying = function() {

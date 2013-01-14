@@ -305,16 +305,17 @@ PlayerRounds = new Meteor.Collection('playerRounds');
 function addPlayerToPlayerRound(userId, round) {
   var playerRound, initialCount;
   playerRound = PlayerRounds.findOne({userId: userId, round: round});
-  initialCount = {count: 5, time: new Date().getTime()};
+  initialCount = {count: 5, when: new Date().getTime()};
   if (!playerRound) {
     playerRound = {
       round: round,
       userId: userId,
       totalTroops: [initialCount],
       floatingTroops: [initialCount],
+      credits: [initialCount],
       messages: [],
       color: getRandomColor(),
-      regionCount: [{count: 0, time: new Date().getTime()}],
+      regionCount: [{count: 0, when: new Date().getTime()}],
       regions: []
     };
     playerRound._id = PlayerRounds.insert(playerRound);
@@ -378,7 +379,7 @@ function updatePlayerTotalTroops(userId, round) {
   });
   playerRound = PlayerRounds.findOne({userId: userId, round: round.round});
   total += _.last(playerRound.floatingTroops).count;
-  playerRound.totalTroops.push({count: total, time: new Date().getTime()});
+  playerRound.totalTroops.push({count: total, when: new Date().getTime()});
   PlayerRounds.update({_id: playerRound._id}, playerRound, global.NOOP);
 }
 
@@ -393,7 +394,7 @@ function setPlayerFloatingTroops(userId, round, troops) {
   if (!playerRound) {
     return;
   }
-  playerRound.floatingTroops.push({count: troops, time: new Date().getTime()});
+  playerRound.floatingTroops.push({count: troops, when: new Date().getTime()});
   PlayerRounds.update({_id: playerRound._id}, playerRound, global.NOOP);
 }
 
